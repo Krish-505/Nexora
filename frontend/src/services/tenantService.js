@@ -17,3 +17,9 @@ export const toggleTenant = async (id) => {
 
   return response.data
 }
+
+export const deleteTenant = async (id) => {
+  const response = await apiClient.delete(`/tenants/${id}`)
+
+  return response.data
+}

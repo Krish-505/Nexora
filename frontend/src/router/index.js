@@ -1,27 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
-import TenantsView from '../views/TenantsView.vue'
-
-// ─── Route components (lazy-loaded) ───────────────────────────────────────
 import LoginView from '../views/LoginView.vue'
+
 const MainLayout = () => import('../layouts/MainLayout.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
 const ProductsView = () => import('../views/ProductsView.vue')
 const HomeView = () => import('../views/HomeView.vue')
+const TenantsView = () => import('../views/TenantsView.vue')
 
-// ─── Routes ───────────────────────────────────────────────────────────────
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    // Public — login page
     {
       path: '/login',
       name: 'login',
       component: LoginView,
       meta: { requiresGuest: true },
     },
-
-    // Protected — dashboard layout
     {
       path: '/',
       component: MainLayout,
@@ -43,18 +38,16 @@ const router = createRouter({
           component: ProductsView,
         },
         {
-          path: '/tenants',
-
+          path: 'tenants',
+          name: 'tenants',
           component: TenantsView,
-
           meta: {
             requiresAuth: true,
+            requiresRole: 'superadmin',
           },
         },
       ],
     },
-
-    // Catch-all — redirect home
     {
       path: '/:pathMatch(.*)*',
       redirect: '/',
@@ -62,17 +55,18 @@ const router = createRouter({
   ],
 })
 
-// ─── Navigation Guard ──────────────────────────────────────────────────────
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 
-  // Route requires authentication but user has no token → go to login
   if (to.meta.requiresAuth && !authStore.token) {
     return { name: 'login' }
   }
 
-  // Route is only for guests (login page) but user is already authenticated
   if (to.meta.requiresGuest && authStore.token) {
+    return { name: 'dashboard' }
+  }
+
+  if (to.meta.requiresRole && authStore.user?.role !== to.meta.requiresRole) {
     return { name: 'dashboard' }
   }
 })

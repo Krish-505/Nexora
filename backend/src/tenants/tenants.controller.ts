@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -46,5 +47,15 @@ export class TenantsController {
     @Req() req: any,
   ) {
     return this.tenantsService.toggleTenant(id, req.user);
+  }
+
+  @Delete(':id')
+  deleteTenant(
+    @Param('id')
+    id: string,
+
+    @Req() req: any,
+  ) {
+    return this.tenantsService.deleteTenant(id, req.user);
   }
 }

@@ -1,114 +1,116 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { login as loginService, getProfile } from '../services/authService'
+import { computed, ref } from 'vue'
+import { getProfile, login as loginService } from '../services/authService'
+
+const getStoredAuthError = () => {
+  const message = sessionStorage.getItem('auth:error') || ''
+  sessionStorage.removeItem('auth:error')
+  return message
+}
 
 export const useAuthStore = defineStore('auth', () => {
-  // ─── State ────────────────────────────────────────────────────────────────
   const user = ref(null)
   const token = ref(localStorage.getItem('token') || null)
   const loading = ref(false)
-  const error = ref('')
+  const error = ref(getStoredAuthError())
 
-  // ─── Getters ──────────────────────────────────────────────────────────────
   const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isSuperadmin = computed(() => user.value?.role === 'superadmin')
 
-  /**
-   * Returns the display label for the current tenant.
-   * - Superadmin  → "Superadmin"
-   * - Tenant user → tenant name from JWT payload
-   */
   const tenantName = computed(() => {
     if (!user.value) return ''
     if (user.value.role === 'superadmin') return 'Superadmin'
-    return user.value.tenantName || user.value.tenant || ''
+    return user.value.tenantName || ''
   })
 
-  const isSuperadmin = computed(() => user.value?.role === 'superadmin')
-
-  /** User's display initials for the avatar */
   const userInitials = computed(() => {
     if (!user.value) return '?'
+
     const name = user.value.name || user.value.email || ''
+
     return name
       .split(' ')
-      .map((n) => n[0])
+      .map((part) => part[0])
       .join('')
       .toUpperCase()
       .slice(0, 2)
   })
 
-  // ─── Actions ──────────────────────────────────────────────────────────────
+  const clearSession = ({ preserveError = false } = {}) => {
+    user.value = null
+    token.value = null
 
-  /**
-   * Restore session from localStorage token on app boot.
-   * Fetches the user profile from the backend using the stored JWT.
-   */
+    if (!preserveError) {
+      error.value = ''
+      sessionStorage.removeItem('auth:error')
+    }
+
+    localStorage.removeItem('token')
+  }
+
   const initAuth = async () => {
     if (!token.value) return
+
     try {
       loading.value = true
       user.value = await getProfile()
     } catch {
-      // Token invalid / expired → clear session
-      logout()
+      if (token.value) {
+        clearSession()
+      }
     } finally {
       loading.value = false
     }
   }
 
-  /** Authenticate with credentials; stores JWT + user in state */
   const login = async (credentials) => {
     loading.value = true
-
     error.value = ''
+    sessionStorage.removeItem('auth:error')
 
     try {
       const response = await loginService(credentials)
 
       token.value = response.accessToken
-
       user.value = response.user
-
       localStorage.setItem('token', response.accessToken)
 
       return response
     } catch (err) {
-      console.error(err)
-
+      clearSession({ preserveError: true })
       error.value = err?.response?.data?.message || 'Invalid email or password'
-      user.value = null
-      token.value = null
-      localStorage.removeItem('token')
 
       throw err
-
     } finally {
       loading.value = false
     }
   }
 
-  /** Clear all auth state and remove JWT from storage */
+  const handleUnauthorized = (message) => {
+    const normalizedMessage =
+      message || 'Your session has expired. Please sign in again.'
+
+    clearSession({ preserveError: true })
+    error.value = normalizedMessage
+    sessionStorage.setItem('auth:error', normalizedMessage)
+  }
+
   const logout = () => {
-    user.value = null
-    token.value = null
-    error.value = ''
-    localStorage.removeItem('token')
+    clearSession()
   }
 
   return {
-    // state
     user,
     token,
     loading,
     error,
-    // getters
     isAuthenticated,
     tenantName,
     isSuperadmin,
     userInitials,
-    // actions
     initAuth,
     login,
     logout,
+    handleUnauthorized,
   }
 })

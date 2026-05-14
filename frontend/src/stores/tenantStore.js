@@ -1,59 +1,81 @@
 import { defineStore } from 'pinia'
-
-import { ref } from 'vue'
-
-import { getTenants, createTenant, toggleTenant } from '../services/tenantService'
+import { computed, ref } from 'vue'
+import {
+  createTenant,
+  deleteTenant,
+  getTenants,
+  toggleTenant,
+} from '../services/tenantService'
 
 export const useTenantStore = defineStore('tenant', () => {
-  // ─── STATE ────────────────────────
   const tenants = ref([])
-
   const loading = ref(false)
-
   const error = ref('')
+  const creating = ref(false)
+  const processingIds = ref([])
 
-  // ─── GET TENANTS ──────────────────
+  const isProcessing = computed(() => (id) => processingIds.value.includes(id))
+
+  const setProcessing = (id, active) => {
+    if (active) {
+      if (!processingIds.value.includes(id)) {
+        processingIds.value = [...processingIds.value, id]
+      }
+
+      return
+    }
+
+    processingIds.value = processingIds.value.filter((entry) => entry !== id)
+  }
+
   const fetchTenants = async () => {
     try {
       loading.value = true
-
       error.value = ''
-
       tenants.value = await getTenants()
     } catch (err) {
-      console.error(err)
-
-      error.value = 'Failed to load tenants'
+      error.value = err?.response?.data?.message || 'Failed to load tenants'
+      throw err
     } finally {
       loading.value = false
     }
   }
 
-  // ─── CREATE TENANT ────────────────
   const addTenant = async (payload) => {
     try {
-      const tenant = await createTenant(payload)
-
-      tenants.value.unshift(tenant)
-    } catch (err) {
-      console.error(err)
-
-      throw err
+      creating.value = true
+      const response = await createTenant(payload)
+      await fetchTenants()
+      return response
+    } finally {
+      creating.value = false
     }
   }
 
-  // ─── TOGGLE TENANT ────────────────
   const toggleTenantStatus = async (id) => {
     try {
+      setProcessing(id, true)
       const updatedTenant = await toggleTenant(id)
-
       const index = tenants.value.findIndex((tenant) => tenant.id === id)
 
       if (index !== -1) {
         tenants.value[index] = updatedTenant
       }
-    } catch (err) {
-      console.error(err)
+
+      return updatedTenant
+    } finally {
+      setProcessing(id, false)
+    }
+  }
+
+  const removeTenant = async (id) => {
+    try {
+      setProcessing(id, true)
+      const response = await deleteTenant(id)
+      tenants.value = tenants.value.filter((tenant) => tenant.id !== id)
+      return response
+    } finally {
+      setProcessing(id, false)
     }
   }
 
@@ -61,9 +83,12 @@ export const useTenantStore = defineStore('tenant', () => {
     tenants,
     loading,
     error,
-
+    creating,
+    processingIds,
+    isProcessing,
     fetchTenants,
     addTenant,
     toggleTenantStatus,
+    removeTenant,
   }
 })

@@ -1,52 +1,91 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
-import { tenants } from '../database/memory-db';
+import { products, tenants, users } from '../database/memory-db';
 
 @Injectable()
 export class TenantsService {
-  // ─── GET TENANTS ──────────────────────
-  getTenants(user: any) {
+  private ensureSuperadmin(user: any) {
     if (user.role !== 'superadmin') {
       throw new ForbiddenException('Access denied');
     }
+  }
+
+  private normalizeSlug(slug: string) {
+    return slug
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  getTenants(user: any) {
+    this.ensureSuperadmin(user);
 
     return tenants;
   }
 
-  // ─── CREATE TENANT ────────────────────
   createTenant(body: any, user: any) {
-    if (user.role !== 'superadmin') {
-      throw new ForbiddenException('Access denied');
+    this.ensureSuperadmin(user);
+
+    const name = body.name?.trim();
+    const slug = this.normalizeSlug(body.slug || '');
+
+    if (!name) {
+      throw new BadRequestException('Tenant name is required');
     }
 
+    if (!slug) {
+      throw new BadRequestException('Tenant slug is required');
+    }
+
+    if (tenants.some((tenant) => tenant.slug === slug)) {
+      throw new BadRequestException('Tenant slug already exists');
+    }
+
+    const adminEmail = `admin@${slug}.com`;
+
+    if (users.some((entry) => entry.email === adminEmail)) {
+      throw new BadRequestException('Tenant admin email already exists');
+    }
+
+    const timestamp = Date.now();
     const newTenant = {
-      id: Date.now().toString(),
-
-      name: body.name,
-
-      slug: body.slug,
-
+      id: `tenant-${timestamp}`,
+      name,
+      slug,
       active: true,
-
       createdAt: new Date(),
     };
 
-    tenants.unshift(newTenant);
+    const tenantAdmin = {
+      id: `tenant-admin-${timestamp}`,
+      email: adminEmail,
+      password: '123456',
+      role: 'tenant-admin',
+      tenantId: newTenant.id,
+    };
 
-    return newTenant;
+    tenants.unshift(newTenant);
+    users.unshift(tenantAdmin);
+
+    return {
+      tenant: newTenant,
+      adminCredentials: {
+        email: tenantAdmin.email,
+        password: tenantAdmin.password,
+      },
+    };
   }
 
-  // ─── TOGGLE ACTIVE STATUS ─────────────
   toggleTenant(id: string, user: any) {
-    if (user.role !== 'superadmin') {
-      throw new ForbiddenException('Access denied');
-    }
+    this.ensureSuperadmin(user);
 
-    const tenant = tenants.find((tenant) => tenant.id === id);
+    const tenant = tenants.find((entry) => entry.id === id);
 
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
@@ -55,5 +94,41 @@ export class TenantsService {
     tenant.active = !tenant.active;
 
     return tenant;
+  }
+
+  deleteTenant(id: string, user: any) {
+    this.ensureSuperadmin(user);
+
+    const tenantIndex = tenants.findIndex((tenant) => tenant.id === id);
+
+    if (tenantIndex === -1) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    const deletedTenant = tenants[tenantIndex];
+    tenants.splice(tenantIndex, 1);
+
+    let deletedProducts = 0;
+    for (let index = products.length - 1; index >= 0; index -= 1) {
+      if (products[index].tenantId === id) {
+        products.splice(index, 1);
+        deletedProducts += 1;
+      }
+    }
+
+    let deletedUsers = 0;
+    for (let index = users.length - 1; index >= 0; index -= 1) {
+      if (users[index].tenantId === id) {
+        users.splice(index, 1);
+        deletedUsers += 1;
+      }
+    }
+
+    return {
+      message: 'Tenant deleted successfully',
+      tenant: deletedTenant,
+      deletedProducts,
+      deletedUsers,
+    };
   }
 }

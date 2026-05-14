@@ -18,8 +18,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // FIND TENANT
     const tenant = tenants.find((tenant) => tenant.id === user.tenantId);
+
+    if (user.role !== 'superadmin' && (!tenant || tenant.active === false)) {
+      throw new UnauthorizedException('Tenant account has been deactivated');
+    }
 
     const payload = {
       userId: user.id,
@@ -57,6 +60,10 @@ export class AuthService {
     }
 
     const tenant = tenants.find((tenant) => tenant.id === user.tenantId);
+
+    if (user.role !== 'superadmin' && (!tenant || tenant.active === false)) {
+      throw new UnauthorizedException('Tenant account has been deactivated');
+    }
 
     return {
       id: user.id,

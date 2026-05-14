@@ -231,6 +231,7 @@ const pageTitles = {
   home: 'Home',
   dashboard: 'Dashboard',
   products: 'Products',
+  tenants: 'Tenants',
 }
 
 const currentPageTitle = computed(() => pageTitles[route.name] || 'Nexora')
