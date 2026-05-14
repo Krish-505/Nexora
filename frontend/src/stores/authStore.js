@@ -23,17 +23,12 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value.tenantName || user.value.tenant || ''
   })
 
-  const isSuperadmin = computed(
-    () => user.value?.role === 'superadmin'
-  )
+  const isSuperadmin = computed(() => user.value?.role === 'superadmin')
 
   /** User's display initials for the avatar */
   const userInitials = computed(() => {
     if (!user.value) return '?'
-    const name =
-      user.value.name ||
-      user.value.email ||
-      ''
+    const name = user.value.name || user.value.email || ''
     return name
       .split(' ')
       .map((n) => n[0])
@@ -63,20 +58,30 @@ export const useAuthStore = defineStore('auth', () => {
 
   /** Authenticate with credentials; stores JWT + user in state */
   const login = async (credentials) => {
+    loading.value = true
+
+    error.value = ''
+
     try {
-      loading.value = true
-      error.value = ''
       const response = await loginService(credentials)
 
       token.value = response.accessToken
+
       user.value = response.user
 
       localStorage.setItem('token', response.accessToken)
+
+      return response
     } catch (err) {
-      error.value =
-        err?.response?.data?.message ||
-        'Invalid credentials. Please try again.'
+      console.error(err)
+
+      error.value = err?.response?.data?.message || 'Invalid email or password'
+      user.value = null
+      token.value = null
+      localStorage.removeItem('token')
+
       throw err
+
     } finally {
       loading.value = false
     }

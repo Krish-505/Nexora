@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import TenantsView from '../views/TenantsView.vue'
 
 // ─── Route components (lazy-loaded) ───────────────────────────────────────
 import LoginView from '../views/LoginView.vue'
@@ -40,6 +41,15 @@ const router = createRouter({
           path: 'products',
           name: 'products',
           component: ProductsView,
+        },
+        {
+          path: '/tenants',
+
+          component: TenantsView,
+
+          meta: {
+            requiresAuth: true,
+          },
         },
       ],
     },

@@ -24,7 +24,11 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isUnauthorized = error.response?.status === 401
+    const requestUrl = error.config?.url || ''
+    const isLoginRequest = requestUrl.includes('/auth/login')
+
+    if (isUnauthorized && !isLoginRequest) {
       // Clear stale token and redirect to login
       localStorage.removeItem('token')
       window.location.href = '/login'

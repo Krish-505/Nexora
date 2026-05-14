@@ -9,7 +9,8 @@
       <div
         class="absolute inset-0 opacity-[0.04]"
         style="
-          background-image: linear-gradient(#94a3b8 1px, transparent 1px),
+          background-image:
+            linear-gradient(#94a3b8 1px, transparent 1px),
             linear-gradient(to right, #94a3b8 1px, transparent 1px);
           background-size: 40px 40px;
         "
@@ -46,7 +47,8 @@
             <span class="text-primary-400">with confidence.</span>
           </h1>
           <p class="text-slate-400 text-lg leading-relaxed max-w-md">
-            Unified multi-tenant platform for product management, analytics, and operational control.
+            Unified multi-tenant platform for product management, analytics, and operational
+            control.
           </p>
         </div>
 
@@ -78,9 +80,7 @@
       <div class="w-full max-w-md">
         <!-- Mobile logo -->
         <div class="flex items-center gap-2.5 mb-10 lg:hidden">
-          <div
-            class="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center"
-          >
+          <div class="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center">
             <ZapIcon class="w-4 h-4 text-white" />
           </div>
           <span class="text-slate-900 font-bold text-lg">Nexora</span>
@@ -88,9 +88,7 @@
 
         <!-- Heading -->
         <div class="mb-8">
-          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">
-            Sign in to your account
-          </h2>
+          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Sign in to your account</h2>
           <p class="text-slate-500 text-sm mt-1.5">
             Enter your credentials to access your workspace.
           </p>
@@ -118,16 +116,11 @@
         <form class="space-y-5" @submit.prevent="handleLogin">
           <!-- Email -->
           <div class="space-y-1.5">
-            <label
-              for="email"
-              class="block text-sm font-medium text-slate-700"
-            >
+            <label for="email" class="block text-sm font-medium text-slate-700">
               Email address
             </label>
             <div class="relative">
-              <div
-                class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
-              >
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <MailIcon class="w-4 h-4 text-slate-400" />
               </div>
               <input
@@ -138,25 +131,26 @@
                 required
                 placeholder="you@company.com"
                 class="block w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
-                :class="{ 'border-red-300 focus:ring-red-500/20 focus:border-red-400': authStore.error }"
+                :class="{
+                  'border-red-300 focus:ring-red-500/20 focus:border-red-400':
+                    authStore.error || validationErrors.email,
+                }"
               />
             </div>
+            <p v-if="validationErrors.email" class="text-xs text-red-600">
+              {{ validationErrors.email }}
+            </p>
           </div>
 
           <!-- Password -->
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
-              <label
-                for="password"
-                class="block text-sm font-medium text-slate-700"
-              >
+              <label for="password" class="block text-sm font-medium text-slate-700">
                 Password
               </label>
             </div>
             <div class="relative">
-              <div
-                class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
-              >
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <LockIcon class="w-4 h-4 text-slate-400" />
               </div>
               <input
@@ -167,7 +161,9 @@
                 required
                 placeholder="••••••••"
                 class="block w-full pl-10 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
-                :class="{ 'border-red-300 focus:ring-red-500/20 focus:border-red-400': authStore.error }"
+                :class="{
+                  'border-red-300 focus:ring-red-500/20 focus:border-red-400': authStore.error,
+                }"
               />
               <button
                 type="button"
@@ -178,6 +174,9 @@
                 <EyeIcon v-else class="w-4 h-4" />
               </button>
             </div>
+            <p v-if="validationErrors.password" class="text-xs text-red-600">
+              {{ validationErrors.password }}
+            </p>
           </div>
 
           <!-- Submit button -->
@@ -186,10 +185,7 @@
             :disabled="authStore.loading"
             class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-primary-500/20 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           >
-            <Loader2Icon
-              v-if="authStore.loading"
-              class="w-4 h-4 animate-spin"
-            />
+            <Loader2Icon v-if="authStore.loading" class="w-4 h-4 animate-spin" />
             <span>{{ authStore.loading ? 'Signing in…' : 'Sign in' }}</span>
             <ArrowRightIcon v-if="!authStore.loading" class="w-4 h-4" />
           </button>
@@ -225,6 +221,10 @@ const authStore = useAuthStore()
 
 const form = reactive({ email: '', password: '' })
 const showPassword = ref(false)
+const validationErrors = reactive({
+  email: '',
+  password: '',
+})
 
 const features = [
   'JWT-authenticated multi-tenant isolation',
@@ -232,13 +232,52 @@ const features = [
   'Role-based access control (RBAC)',
   'Enterprise-grade audit logging',
 ]
+const validateForm = () => {
+  validationErrors.email = ''
+  validationErrors.password = ''
 
+  let isValid = true
+
+  // EMAIL REQUIRED
+  if (!form.email.trim()) {
+    validationErrors.email = 'Email is required'
+
+    isValid = false
+  }
+
+  // EMAIL FORMAT
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    validationErrors.email = 'Enter a valid email address'
+
+    isValid = false
+  }
+
+  // PASSWORD REQUIRED
+  if (!form.password.trim()) {
+    validationErrors.password = 'Password is required'
+
+    isValid = false
+  }
+
+  return isValid
+}
 const handleLogin = async () => {
+  // CLEAR OLD STORE ERROR
+  authStore.error = ''
+
+  // VALIDATE FIRST
+  if (!validateForm()) {
+    return
+  }
+
   try {
-    await authStore.login(form)
-    router.push('/dashboard')
+    const response = await authStore.login(form)
+
+    if (response?.accessToken) {
+      router.push('/dashboard')
+    }
   } catch {
-    // Error is already set in authStore.error
+    // handled in store
   }
 }
 </script>

@@ -21,12 +21,7 @@ defineProps({
   editingId: Number,
 })
 
-const emit = defineEmits([
-  'delete-product',
-  'edit-product',
-  'update-product',
-  'cancel-edit',
-])
+const emit = defineEmits(['delete-product', 'edit-product', 'update-product', 'cancel-edit'])
 </script>
 
 <style scoped>

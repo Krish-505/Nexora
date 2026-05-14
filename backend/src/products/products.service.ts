@@ -8,7 +8,7 @@ import { products } from '../database/memory-db';
 
 @Injectable()
 export class ProductsService {
-  // GET PRODUCTS
+  // ─── GET PRODUCTS ─────────────────────
   getProducts(user: any) {
     // SUPERADMIN
     if (user.role === 'superadmin') {
@@ -19,9 +19,8 @@ export class ProductsService {
     return products.filter((product) => product.tenantId === user.tenantId);
   }
 
-  // CREATE PRODUCT
+  // ─── CREATE PRODUCT ───────────────────
   createProduct(user: any, body: any) {
-    // SUPERADMIN CANNOT CREATE
     if (user.role === 'superadmin') {
       throw new ForbiddenException('Superadmin cannot create products');
     }
@@ -31,17 +30,41 @@ export class ProductsService {
 
       name: body.name,
 
+      sku: body.sku,
+
+      category: body.category,
+
+      stock: body.stock,
+
       price: body.price,
 
       tenantId: user.tenantId,
     };
 
-    products.push(newProduct);
+    products.unshift(newProduct);
 
     return newProduct;
   }
 
-  // DELETE PRODUCT
+  // ─── UPDATE PRODUCT ───────────────────
+  updateProduct(id: string, body: any, user: any) {
+    const product = products.find((product) => product.id === id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // TENANT SECURITY
+    if (user.role !== 'superadmin' && product.tenantId !== user.tenantId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    Object.assign(product, body);
+
+    return product;
+  }
+
+  // ─── DELETE PRODUCT ───────────────────
   deleteProduct(id: string, user: any) {
     const product = products.find((product) => product.id === id);
 
@@ -49,7 +72,7 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    // TENANT ISOLATION
+    // TENANT SECURITY
     if (user.role !== 'superadmin' && product.tenantId !== user.tenantId) {
       throw new ForbiddenException('Access denied');
     }

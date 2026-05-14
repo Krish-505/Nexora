@@ -1,5 +1,10 @@
 <template>
   <div class="flex flex-col gap-6 h-full">
+    <div v-if="authStore.isSuperadmin" class="superadmin-banner">
+      <h3>Superadmin View</h3>
+
+      <p>Viewing products across all tenants.</p>
+    </div>
     <!-- ─── Page Header ──────────────────────────────────────────────── -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
@@ -12,6 +17,7 @@
         </p>
       </div>
       <button
+        v-if="!authStore.isSuperadmin"
         id="btn-add-product"
         class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-primary-500/20 transition-all shrink-0"
         @click="openAddModal"
@@ -87,7 +93,11 @@
             <div class="text-center">
               <p class="text-sm font-semibold text-slate-700">No products found</p>
               <p class="text-xs text-slate-500 mt-1">
-                {{ productStore.searchQuery ? 'Try adjusting your search.' : 'Start by adding your first product.' }}
+                {{
+                  productStore.searchQuery
+                    ? 'Try adjusting your search.'
+                    : 'Start by adding your first product.'
+                }}
               </p>
             </div>
             <button
@@ -170,7 +180,7 @@
 
         <!-- Actions column -->
         <template #cell-actions="{ row }">
-          <div class="flex items-center justify-end gap-1">
+          <div v-if="!authStore.isSuperadmin" class="flex items-center justify-end gap-1">
             <button
               class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Edit product"
@@ -181,7 +191,7 @@
             <button
               class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               title="Delete product"
-              @click="handleDelete(row.id)"
+              @click="openDeleteModal(row)"
             >
               <Trash2Icon class="w-3.5 h-3.5" />
             </button>
@@ -279,13 +289,21 @@
       </template>
     </AppModal>
   </div>
+  <BaseModal
+    v-model="showDeleteModal"
+    title="Delete Product"
+    :description="`Are you sure you want to delete ${selectedProduct?.name || 'this product'}?`"
+    @confirm="confirmDelete"
+  />
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useProductStore } from '../stores/productStore'
+import { useAuthStore } from '../stores/authStore'
 import AppTable from '../components/ui/AppTable.vue'
 import AppModal from '../components/ui/AppModal.vue'
+import BaseModal from '../components/BaseModal.vue'
 import {
   Plus as PlusIcon,
   Search as SearchIcon,
@@ -299,16 +317,21 @@ import {
 } from 'lucide-vue-next'
 
 const productStore = useProductStore()
+const authStore = useAuthStore()
+const showDeleteModal = ref(false)
+const deleting = ref(false)
+
+const selectedProduct = ref(null)
 
 // ─── Table columns ──────────────────────────────────────────────────────────
 const columns = [
-  { key: 'id',       label: 'ID',       class: 'w-20' },
-  { key: 'name',     label: 'Name' },
-  { key: 'sku',      label: 'SKU',      class: 'w-28 hidden md:table-cell' },
+  { key: 'id', label: 'ID', class: 'w-20' },
+  { key: 'name', label: 'Name' },
+  { key: 'sku', label: 'SKU', class: 'w-28 hidden md:table-cell' },
   { key: 'category', label: 'Category', class: 'hidden lg:table-cell' },
-  { key: 'price',    label: 'Price',    class: 'w-28 hidden sm:table-cell' },
-  { key: 'stock',    label: 'Stock',    class: 'w-24 hidden sm:table-cell' },
-  { key: 'actions',  label: '',         class: 'w-20 text-right' },
+  { key: 'price', label: 'Price', class: 'w-28 hidden sm:table-cell' },
+  { key: 'stock', label: 'Stock', class: 'w-24 hidden sm:table-cell' },
+  { key: 'actions', label: '', class: 'w-20 text-right' },
 ]
 
 // ─── Modal state ────────────────────────────────────────────────────────────
@@ -377,9 +400,29 @@ const handleSave = async () => {
 }
 
 // ─── Delete ─────────────────────────────────────────────────────────────────
-const handleDelete = async (id) => {
-  if (!confirm('Delete this product? This action cannot be undone.')) return
-  await productStore.deleteProduct(id)
+const openDeleteModal = (product) => {
+  selectedProduct.value = product
+
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  if (!selectedProduct.value) return
+
+  try {
+    deleting.value = true
+    await productStore.deleteProduct(selectedProduct.value.id)
+
+    showDeleteModal.value = false
+
+    selectedProduct.value = null
+  }
+   
+  catch (error) {
+    console.error(error)
+  } finally {
+    deleting.value = false
+  }
 }
 
 // ─── Init ────────────────────────────────────────────────────────────────────
@@ -387,3 +430,17 @@ onMounted(() => {
   productStore.loadProducts()
 })
 </script>
+
+<style scoped>
+.superadmin-banner {
+  margin-bottom: 16px;
+
+  padding: 16px;
+
+  border-radius: 12px;
+
+  background: #1e293b;
+
+  color: white;
+}
+</style>

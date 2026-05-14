@@ -55,11 +55,16 @@
             :class="authStore.isSuperadmin ? 'bg-amber-400' : 'bg-emerald-400'"
           />
           <div class="min-w-0">
-            <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold leading-none mb-0.5">
+            <p
+              class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold leading-none mb-0.5"
+            >
               {{ authStore.isSuperadmin ? 'Role' : 'Tenant' }}
             </p>
             <p class="text-sm text-slate-200 font-medium truncate leading-tight">
               {{ authStore.tenantName || '—' }}
+            </p>
+            <p class="text-[11px] text-slate-500 mt-1">
+              {{ authStore.isSuperadmin ? 'Superadmin' : 'Tenant Admin' }}
             </p>
           </div>
         </div>
@@ -67,7 +72,7 @@
         <!-- User row -->
         <button
           class="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/5 transition-colors group"
-          @click="handleLogout"
+          @click="showLogoutModal = true"
           title="Click to sign out"
         >
           <div
@@ -130,9 +135,7 @@
             class="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
           >
             <BellIcon class="w-4.5 h-4.5" />
-            <span
-              class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"
-            />
+            <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
           </button>
 
           <!-- Avatar -->
@@ -152,12 +155,22 @@
       </main>
     </div>
   </div>
+  <BaseModal
+  v-model="showLogoutModal"
+
+  title="Sign Out"
+
+  description="Are you sure you want to sign out of your account?"
+
+  @confirm="handleLogout"
+/>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import BaseModal from '../components/BaseModal.vue'
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -174,13 +187,44 @@ const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
+const showLogoutModal = ref(false)
 
 // ─── Navigation items ──────────────────────────────────────────────────────
-const navItems = [
-  { name: 'Home', path: '/', icon: Home, exact: true },
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { name: 'Products', path: '/products', icon: ShoppingBag },
-]
+const navItems = computed(() => {
+  const items = [
+    {
+      name: 'Home',
+      path: '/',
+      icon: Home,
+      exact: true,
+    },
+
+    {
+      name: 'Dashboard',
+      path: '/dashboard',
+      icon: LayoutDashboard,
+    },
+
+    {
+      name: 'Products',
+      path: '/products',
+      icon: ShoppingBag,
+    },
+  ]
+
+  // SUPERADMIN ONLY
+  if (authStore.isSuperadmin) {
+    items.push({
+      name: 'Tenants',
+
+      path: '/tenants',
+
+      icon: BuildingIcon,
+    })
+  }
+
+  return items
+})
 
 // ─── Dynamic page title for topbar ────────────────────────────────────────
 const pageTitles = {
@@ -189,13 +233,14 @@ const pageTitles = {
   products: 'Products',
 }
 
-const currentPageTitle = computed(
-  () => pageTitles[route.name] || 'Nexora'
-)
+const currentPageTitle = computed(() => pageTitles[route.name] || 'Nexora')
 
 // ─── Logout ───────────────────────────────────────────────────────────────
 const handleLogout = () => {
   authStore.logout()
+
+  showLogoutModal.value = false
+
   router.push('/login')
 }
 </script>
