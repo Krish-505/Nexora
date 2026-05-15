@@ -1,41 +1,38 @@
 <template>
-  <div class="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-    <table class="w-full text-sm text-left">
-      <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+  <DataTableWrapper>
+    <table class="w-full text-left text-sm">
+      <thead class="sticky top-0 z-10 border-b border-slate-200/70 bg-white/85 text-xs uppercase text-slate-500 backdrop-blur">
         <tr>
-          <th 
-            v-for="(col, index) in columns" 
+          <th
+            v-for="(col, index) in columns"
             :key="col.key || index"
-            :class="['px-6 py-3 font-semibold', col.class]"
+            :class="['px-5 py-3 font-bold tracking-[0.12em]', col.class]"
           >
             {{ col.label }}
           </th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-100">
+      <tbody class="divide-y divide-slate-100/80">
         <tr v-if="loading">
-          <td :colspan="columns.length" class="px-6 py-10 text-center">
-            <div class="flex items-center justify-center text-slate-500">
-              <Loader2Icon class="w-6 h-6 animate-spin mr-2" />
-              Loading...
-            </div>
+          <td :colspan="columns.length" class="px-5 py-10">
+            <LoadingSkeleton :rows="4" />
           </td>
         </tr>
         <tr v-else-if="!data || data.length === 0">
-          <td :colspan="columns.length" class="px-6 py-12 text-center text-slate-500">
+          <td :colspan="columns.length" class="px-5 py-12 text-center text-slate-500">
             <slot name="empty">No data available.</slot>
           </td>
         </tr>
-        <tr 
+        <tr
+          v-for="(row, rowIndex) in data"
           v-else
-          v-for="(row, rowIndex) in data" 
           :key="row.id || rowIndex"
-          class="hover:bg-slate-50/50 transition-colors"
+          class="group transition duration-200 hover:bg-slate-50/80"
         >
-          <td 
-            v-for="col in columns" 
+          <td
+            v-for="col in columns"
             :key="col.key"
-            :class="['px-6 py-4', col.class]"
+            :class="['px-5 py-4 transition duration-200 group-hover:translate-x-0.5', col.class]"
           >
             <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]">
               {{ row[col.key] }}
@@ -44,22 +41,22 @@
         </tr>
       </tbody>
     </table>
-  </div>
+  </DataTableWrapper>
 </template>
 
 <script setup>
-import { Loader2 as Loader2Icon } from 'lucide-vue-next'
+import DataTableWrapper from './DataTableWrapper.vue'
+import LoadingSkeleton from './LoadingSkeleton.vue'
 
 defineProps({
   columns: {
     type: Array,
     required: true,
-    // { key: 'name', label: 'Name', class: 'text-right' }
   },
   data: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
-  loading: Boolean
+  loading: Boolean,
 })
 </script>

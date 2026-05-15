@@ -1,52 +1,38 @@
 <template>
   <Teleport to="body">
-    <Transition
-      enter-active-class="transition duration-200 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-150 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
+    <Transition name="modal-fade">
       <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <!-- Backdrop -->
-        <div 
-          class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        <div
+          class="fixed inset-0 bg-slate-950/55 backdrop-blur-xl"
           @click="closeOnBackdrop && $emit('update:modelValue', false)"
-        ></div>
+        />
 
-        <!-- Modal Panel -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          enter-to-class="opacity-100 translate-y-0 sm:scale-100"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-          leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-        >
-          <div 
+        <Transition name="modal-panel" appear>
+          <div
             v-if="modelValue"
-            class="relative bg-white rounded-xl shadow-xl border border-slate-200 w-full overflow-hidden transform transition-all"
+            class="relative w-full overflow-hidden rounded-2xl border border-white/70 bg-white/92 shadow-[0_30px_90px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/5 backdrop-blur-2xl"
             :style="{ maxWidth }"
           >
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">{{ title }}</h3>
-              <button 
+            <div
+              class="flex items-center justify-between border-b border-slate-200/70 bg-gradient-to-b from-white to-slate-50/80 px-6 py-4"
+            >
+              <h3 class="text-base font-bold text-slate-900">{{ title }}</h3>
+              <button
+                class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:scale-95"
                 @click="$emit('update:modelValue', false)"
-                class="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
-                <XIcon class="w-5 h-5" />
+                <XIcon class="h-4 w-4" />
               </button>
             </div>
 
-            <!-- Content -->
-            <div class="px-6 py-5 max-h-[70vh] overflow-y-auto">
+            <div class="max-h-[70vh] overflow-y-auto px-6 py-5">
               <slot />
             </div>
 
-            <!-- Footer -->
-            <div v-if="$slots.footer" class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+            <div
+              v-if="$slots.footer"
+              class="flex justify-end gap-3 border-t border-slate-200/70 bg-slate-50/80 px-6 py-4"
+            >
               <slot name="footer" />
             </div>
           </div>
@@ -65,22 +51,47 @@ const props = defineProps({
   title: String,
   maxWidth: {
     type: String,
-    default: '500px'
+    default: '500px',
   },
   closeOnBackdrop: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 })
 
-const emit = defineEmits(['update:modelValue'])
+defineEmits(['update:modelValue'])
 
-// Lock body scroll
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen) {
-    document.body.style.overflow = 'hidden'
-  } else {
-    document.body.style.overflow = ''
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
   }
-})
+)
 </script>
+
+<style scoped>
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity var(--nx-duration) var(--nx-ease);
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-panel-enter-active,
+.modal-panel-leave-active {
+  transition:
+    opacity var(--nx-duration-slow) var(--nx-ease),
+    transform var(--nx-duration-slow) var(--nx-ease),
+    filter var(--nx-duration-slow) var(--nx-ease);
+}
+
+.modal-panel-enter-from,
+.modal-panel-leave-to {
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  filter: blur(8px);
+}
+</style>

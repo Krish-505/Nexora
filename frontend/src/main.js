@@ -11,7 +11,6 @@ const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
-app.use(router)
 
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
@@ -30,6 +29,13 @@ registerUnauthorizedHandler((message) => {
   }
 })
 
-authStore.initAuth().finally(() => {
+const bootstrap = async () => {
+  await authStore.initAuth()
+
+  app.use(router)
+  await router.isReady()
+
   app.mount('#app')
-})
+}
+
+bootstrap()

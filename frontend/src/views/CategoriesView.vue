@@ -1,17 +1,12 @@
 <template>
+  <div>
   <div class="space-y-6">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          {{ authStore.isSuperadmin ? 'Platform Catalog' : authStore.tenantName }}
-        </p>
-        <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900">Categories</h1>
-        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-          Organize inventory into tenant-scoped category entities used by products.
-        </p>
-      </div>
-
-      <div class="flex flex-col gap-3 sm:flex-row">
+    <PageHeader
+      :eyebrow="authStore.isSuperadmin ? 'Platform Catalog' : authStore.tenantName"
+      title="Categories"
+      description="Organize inventory into tenant-scoped category entities used by products."
+    >
+      <template #actions>
         <AppButton variant="outline" :loading="categoryStore.loading" @click="refreshCategories">
           <RefreshCwIcon class="mr-2 h-4 w-4" />
           Refresh
@@ -20,8 +15,8 @@
           <PlusIcon class="mr-2 h-4 w-4" />
           Create Category
         </AppButton>
-      </div>
-    </div>
+      </template>
+    </PageHeader>
 
     <section
       v-if="authStore.isSuperadmin"
@@ -31,7 +26,7 @@
       their own inventory.
     </section>
 
-    <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <SectionCard body-class="p-4">
       <div class="flex flex-col gap-3 md:flex-row">
       <div class="relative w-full md:max-w-md">
         <SearchIcon class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -43,18 +38,18 @@
         />
       </div>
 
-      <select
+      <AppSelect
         v-if="authStore.isSuperadmin"
         v-model="categoryStore.tenantFilter"
-        class="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 md:w-64"
+        class="md:w-64"
       >
         <option value="">All tenants</option>
         <option v-for="tenant in tenantStore.tenants" :key="tenant.id" :value="tenant.id">
           {{ tenant.name }}
         </option>
-      </select>
+      </AppSelect>
       </div>
-    </section>
+    </SectionCard>
 
     <Transition
       enter-active-class="transition duration-200 ease-out"
@@ -107,13 +102,11 @@
       <article
         v-for="category in categoryStore.filteredCategories"
         :key="category.id"
-        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+        class="nx-surface-strong nx-card-hover rounded-2xl p-5"
       >
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <span
-              class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 ring-1 ring-primary-100"
-            >
+            <span class="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-700 ring-1 ring-primary-100">
               {{ category.name }}
             </span>
             <p class="mt-3 truncate font-mono text-xs text-slate-400">{{ category.slug }}</p>
@@ -190,6 +183,7 @@
     :description="`Delete ${selectedCategory?.name || 'this category'}? Categories with products cannot be deleted.`"
     @confirm="confirmDelete"
   />
+  </div>
 </template>
 
 <script setup>
@@ -197,7 +191,10 @@ import { onMounted, reactive, ref } from 'vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppInput from '../components/ui/AppInput.vue'
 import AppModal from '../components/ui/AppModal.vue'
+import AppSelect from '../components/ui/AppSelect.vue'
 import BaseModal from '../components/BaseModal.vue'
+import PageHeader from '../components/ui/PageHeader.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useCategoryStore } from '../stores/categoryStore'
 import { useNotificationStore } from '../stores/notificationStore'

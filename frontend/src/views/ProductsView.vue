@@ -1,12 +1,24 @@
 <template>
+  <div class="h-full">
   <div class="flex flex-col gap-6 h-full">
-    <div v-if="authStore.isSuperadmin" class="superadmin-banner">
-      <h3>Superadmin View</h3>
-
-      <p>Viewing products across all tenants.</p>
-    </div>
+    <PageHeader
+      :eyebrow="authStore.isSuperadmin ? 'Platform Inventory' : authStore.tenantName"
+      title="Products"
+      :description="`Manage product inventory${productStore.products.length ? ` across ${productStore.products.length} item(s)` : ''}.`"
+    >
+      <template #actions>
+        <AppButton
+          v-if="!authStore.isSuperadmin"
+          id="btn-add-product"
+          @click="openAddModal"
+        >
+          <PlusIcon class="w-4 h-4" />
+          Add Product
+        </AppButton>
+      </template>
+    </PageHeader>
     <!-- ─── Page Header ──────────────────────────────────────────────── -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div v-if="false" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Products</h1>
         <p class="text-sm text-slate-500 mt-1">
@@ -339,6 +351,7 @@
     :description="`Are you sure you want to delete ${selectedProduct?.name || 'this product'}?`"
     @confirm="confirmDelete"
   />
+  </div>
 </template>
 
 <script setup>
@@ -347,8 +360,10 @@ import { useProductStore } from '../stores/productStore'
 import { useAuthStore } from '../stores/authStore'
 import { useCategoryStore } from '../stores/categoryStore'
 import { useTenantStore } from '../stores/tenantStore'
+import AppButton from '../components/ui/AppButton.vue'
 import AppTable from '../components/ui/AppTable.vue'
 import AppModal from '../components/ui/AppModal.vue'
+import PageHeader from '../components/ui/PageHeader.vue'
 import BaseModal from '../components/BaseModal.vue'
 import {
   Plus as PlusIcon,

@@ -182,6 +182,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <div>
   <div class="space-y-6">
     <section
       class="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-6 text-white shadow-sm"
@@ -450,4 +451,5 @@ onMounted(() => {
       </AppButton>
     </template>
   </AppModal>
+  </div>
 </template>

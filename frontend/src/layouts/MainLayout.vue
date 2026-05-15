@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+  <div class="flex h-screen overflow-hidden font-sans text-slate-900">
     <!-- MOBILE OVERLAY -->
     <div
       v-if="isMobileMenuOpen"
@@ -15,12 +15,12 @@
         'lg:translate-x-0 lg:static lg:inset-0',
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
       ]"
-      class="bg-slate-900"
+      class="bg-slate-950 shadow-[22px_0_80px_rgba(15,23,42,0.18)]"
     >
       <!-- Brand / Logo -->
       <div class="flex items-center gap-3 h-16 px-5 border-b border-white/10 shrink-0">
         <div
-          class="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center shadow-sm shrink-0"
+          class="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center shadow-[0_10px_30px_rgba(14,165,233,0.28)] shrink-0"
         >
           <ZapIcon class="w-4 h-4 text-white" />
         </div>
@@ -34,10 +34,13 @@
           :key="item.path"
           :to="item.path"
           :exact="item.exact"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 font-medium text-sm transition-all duration-150 hover:bg-white/5 hover:text-white group"
-          active-class="bg-white/10 text-white"
+          class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 font-semibold text-sm transition-all duration-200 hover:bg-white/7 hover:text-white group active:scale-[0.99]"
+          active-class="bg-white/10 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
           @click="isMobileMenuOpen = false"
         >
+          <span
+            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-sky-400 opacity-0 shadow-[0_0_18px_rgba(56,189,248,0.75)] transition-opacity duration-200 group-[.router-link-active]:opacity-100"
+          />
           <component
             :is="item.icon"
             class="w-4.5 h-4.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity"
@@ -97,7 +100,7 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <!-- Top Navbar -->
       <header
-        class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-sm z-10"
+        class="h-16 bg-white/82 backdrop-blur-xl border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-sm z-10"
       >
         <!-- Mobile hamburger -->
         <button
@@ -148,9 +151,13 @@
       </header>
 
       <!-- Page Content -->
-      <main class="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <div class="max-w-7xl mx-auto w-full h-full">
-          <RouterView />
+          <RouterView v-slot="{ Component, route }">
+            <Transition name="page" mode="out-in">
+              <component :is="Component" v-if="Component" :key="route.fullPath" />
+            </Transition>
+          </RouterView>
         </div>
       </main>
     </div>
