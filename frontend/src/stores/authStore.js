@@ -1,6 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { getProfile, login as loginService } from '../services/authService'
+import {
+  getProfile,
+  login as loginService,
+  logout as logoutService,
+} from '../services/authService'
 
 const getStoredAuthError = () => {
   const message = sessionStorage.getItem('auth:error') || ''
@@ -95,8 +99,16 @@ export const useAuthStore = defineStore('auth', () => {
     sessionStorage.setItem('auth:error', normalizedMessage)
   }
 
-  const logout = () => {
-    clearSession()
+  const logout = async () => {
+    const shouldAuditLogout = !!token.value && !!user.value
+
+    try {
+      if (shouldAuditLogout) {
+        await logoutService()
+      }
+    } finally {
+      clearSession()
+    }
   }
 
   return {

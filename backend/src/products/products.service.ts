@@ -1,13 +1,41 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
-import { products } from '../database/memory-db';
+import { categories, products } from '../database/memory-db';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class ProductsService {
+  constructor(private auditService: AuditService) {}
+
+  private resolveCategoryForProduct(user: any, body: any, currentTenantId: string) {
+    const category = body.categoryId
+      ? categories.find((entry) => entry.id === body.categoryId)
+      : categories.find(
+          (entry) =>
+            entry.tenantId === currentTenantId &&
+            entry.name.toLowerCase() === body.category?.trim()?.toLowerCase(),
+        );
+
+    if (!category) {
+      throw new BadRequestException('Category is required');
+    }
+
+    if (category.tenantId !== currentTenantId) {
+      throw new ForbiddenException('Category does not belong to this tenant');
+    }
+
+    if (user.role !== 'superadmin' && category.tenantId !== user.tenantId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    return category;
+  }
+
   // ─── GET PRODUCTS ─────────────────────
   getProducts(user: any) {
     // SUPERADMIN
@@ -25,6 +53,8 @@ export class ProductsService {
       throw new ForbiddenException('Superadmin cannot create products');
     }
 
+    const category = this.resolveCategoryForProduct(user, body, user.tenantId);
+
     const newProduct = {
       id: Date.now().toString(),
 
@@ -32,7 +62,9 @@ export class ProductsService {
 
       sku: body.sku,
 
-      category: body.category,
+      categoryId: category.id,
+
+      categoryName: category.name,
 
       stock: body.stock,
 
@@ -42,6 +74,12 @@ export class ProductsService {
     };
 
     products.unshift(newProduct);
+
+    this.auditService.logForUser(user, {
+      action: 'PRODUCT_CREATED',
+      message: `Tenant admin created product ${newProduct.name}`,
+      tenantId: newProduct.tenantId,
+    });
 
     return newProduct;
   }
@@ -59,7 +97,30 @@ export class ProductsService {
       throw new ForbiddenException('Access denied');
     }
 
-    Object.assign(product, body);
+    const category =
+      body.categoryId || body.category
+        ? this.resolveCategoryForProduct(user, body, product.tenantId)
+        : null;
+
+    Object.assign(product, {
+      ...body,
+      ...(category
+        ? {
+            categoryId: category.id,
+            categoryName: category.name,
+          }
+        : {}),
+    });
+
+    delete (product as any).category;
+
+    this.auditService.logForUser(user, {
+      action: 'PRODUCT_UPDATED',
+      message: `${user.role === 'superadmin' ? 'Superadmin' : 'Tenant admin'} updated product ${
+        product.name
+      }`,
+      tenantId: product.tenantId,
+    });
 
     return product;
   }
@@ -80,6 +141,14 @@ export class ProductsService {
     const index = products.findIndex((product) => product.id === id);
 
     products.splice(index, 1);
+
+    this.auditService.logForUser(user, {
+      action: 'PRODUCT_DELETED',
+      message: `${user.role === 'superadmin' ? 'Superadmin' : 'Tenant admin'} deleted product ${
+        product.name
+      }`,
+      tenantId: product.tenantId,
+    });
 
     return {
       message: 'Product deleted successfully',

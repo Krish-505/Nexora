@@ -64,6 +64,31 @@
           />
         </div>
 
+        <select
+          v-if="authStore.isSuperadmin"
+          v-model="productStore.tenantFilter"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 sm:w-56"
+        >
+          <option value="">All tenants</option>
+          <option v-for="tenant in tenantStore.tenants" :key="tenant.id" :value="tenant.id">
+            {{ tenant.name }}
+          </option>
+        </select>
+
+        <select
+          v-model="productStore.categoryFilter"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 sm:w-56"
+        >
+          <option value="">All categories</option>
+          <option
+            v-for="category in categoryOptions"
+            :key="category.id"
+            :value="category.id"
+          >
+            {{ category.name }}
+          </option>
+        </select>
+
         <!-- Refresh -->
         <button
           class="ml-auto flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-800 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
@@ -101,7 +126,7 @@
               </p>
             </div>
             <button
-              v-if="!productStore.searchQuery"
+              v-if="!authStore.isSuperadmin && !productStore.searchQuery && !productStore.categoryFilter"
               class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-colors"
               @click="openAddModal"
             >
@@ -131,7 +156,7 @@
         </template>
 
         <!-- Category column -->
-        <template #cell-category="{ value }">
+        <template #cell-categoryName="{ value }">
           <span
             v-if="value"
             class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 border border-primary-100"
@@ -139,6 +164,12 @@
             {{ value }}
           </span>
           <span v-else class="text-slate-400">—</span>
+        </template>
+
+        <template #cell-tenantId="{ value }">
+          <span class="text-sm font-medium text-slate-700">
+            {{ tenantName(value) }}
+          </span>
         </template>
 
         <!-- Price column -->
@@ -235,13 +266,26 @@
             />
           </div>
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-slate-700">Category</label>
-            <input
-              v-model="formData.category"
-              type="text"
-              placeholder="e.g. Electronics"
+            <label class="block text-sm font-medium text-slate-700">
+              Category <span class="text-red-500">*</span>
+            </label>
+            <select
+              v-model="formData.categoryId"
               class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
-            />
+              :class="{ 'border-red-300': formErrors.categoryId }"
+            >
+              <option value="">Select category</option>
+              <option
+                v-for="category in categoryStore.categories"
+                :key="category.id"
+                :value="category.id"
+              >
+                {{ category.name }}
+              </option>
+            </select>
+            <p v-if="formErrors.categoryId" class="text-xs text-red-600">
+              {{ formErrors.categoryId }}
+            </p>
           </div>
         </div>
 
@@ -298,9 +342,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useProductStore } from '../stores/productStore'
 import { useAuthStore } from '../stores/authStore'
+import { useCategoryStore } from '../stores/categoryStore'
+import { useTenantStore } from '../stores/tenantStore'
 import AppTable from '../components/ui/AppTable.vue'
 import AppModal from '../components/ui/AppModal.vue'
 import BaseModal from '../components/BaseModal.vue'
@@ -318,28 +364,53 @@ import {
 
 const productStore = useProductStore()
 const authStore = useAuthStore()
+const categoryStore = useCategoryStore()
+const tenantStore = useTenantStore()
 const showDeleteModal = ref(false)
 const deleting = ref(false)
 
 const selectedProduct = ref(null)
 
 // ─── Table columns ──────────────────────────────────────────────────────────
-const columns = [
-  { key: 'id', label: 'ID', class: 'w-20' },
-  { key: 'name', label: 'Name' },
-  { key: 'sku', label: 'SKU', class: 'w-28 hidden md:table-cell' },
-  { key: 'category', label: 'Category', class: 'hidden lg:table-cell' },
-  { key: 'price', label: 'Price', class: 'w-28 hidden sm:table-cell' },
-  { key: 'stock', label: 'Stock', class: 'w-24 hidden sm:table-cell' },
-  { key: 'actions', label: '', class: 'w-20 text-right' },
-]
+const columns = computed(() => {
+  const baseColumns = [
+    { key: 'id', label: 'ID', class: 'w-20' },
+    { key: 'name', label: 'Name' },
+    { key: 'sku', label: 'SKU', class: 'w-28 hidden md:table-cell' },
+    { key: 'categoryName', label: 'Category', class: 'hidden lg:table-cell' },
+  ]
+
+  if (authStore.isSuperadmin) {
+    baseColumns.push({ key: 'tenantId', label: 'Tenant', class: 'hidden lg:table-cell' })
+  }
+
+  return [
+    ...baseColumns,
+    { key: 'price', label: 'Price', class: 'w-28 hidden sm:table-cell' },
+    { key: 'stock', label: 'Stock', class: 'w-24 hidden sm:table-cell' },
+    { key: 'actions', label: '', class: 'w-20 text-right' },
+  ]
+})
+
+const categoryOptions = computed(() => {
+  if (!authStore.isSuperadmin || !productStore.tenantFilter) {
+    return categoryStore.categories
+  }
+
+  return categoryStore.categories.filter(
+    (category) => category.tenantId === productStore.tenantFilter
+  )
+})
+
+const tenantName = (tenantId) =>
+  tenantStore.tenants.find((tenant) => tenant.id === tenantId)?.name || tenantId
 
 // ─── Modal state ────────────────────────────────────────────────────────────
 const isModalOpen = ref(false)
 const isEditing = ref(false)
 const isSaving = ref(false)
 const formErrors = ref({})
-const emptyForm = () => ({ id: null, name: '', sku: '', category: '', price: null, stock: null })
+const emptyForm = () => ({ id: null, name: '', sku: '', categoryId: '', price: null, stock: null })
 const formData = ref(emptyForm())
 
 const openAddModal = () => {
@@ -355,7 +426,7 @@ const openEditModal = (product) => {
     id: product.id,
     name: product.name ?? '',
     sku: product.sku ?? '',
-    category: product.category ?? '',
+    categoryId: product.categoryId ?? '',
     price: product.price ?? null,
     stock: product.stock ?? null,
   }
@@ -371,6 +442,7 @@ const closeModal = () => {
 const validate = () => {
   const errors = {}
   if (!formData.value.name?.trim()) errors.name = 'Product name is required.'
+  if (!formData.value.categoryId) errors.categoryId = 'Select a category.'
   formErrors.value = errors
   return Object.keys(errors).length === 0
 }
@@ -383,7 +455,7 @@ const handleSave = async () => {
     const payload = {
       name: formData.value.name.trim(),
       sku: formData.value.sku?.trim() || undefined,
-      category: formData.value.category?.trim() || undefined,
+      categoryId: formData.value.categoryId,
       price: formData.value.price ?? undefined,
       stock: formData.value.stock ?? undefined,
     }
@@ -428,7 +500,23 @@ const confirmDelete = async () => {
 // ─── Init ────────────────────────────────────────────────────────────────────
 onMounted(() => {
   productStore.loadProducts()
+  categoryStore.loadCategories()
+  if (authStore.isSuperadmin) {
+    tenantStore.fetchTenants()
+  }
 })
+
+watch(
+  () => productStore.tenantFilter,
+  () => {
+    if (
+      productStore.categoryFilter &&
+      !categoryOptions.value.some((category) => category.id === productStore.categoryFilter)
+    ) {
+      productStore.categoryFilter = ''
+    }
+  }
+)
 </script>
 
 <style scoped>

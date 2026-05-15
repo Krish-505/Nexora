@@ -3,7 +3,9 @@ export class CreateProductDto {
 
   sku: string;
 
-  category: string;
+  categoryId: string;
+
+  category?: string;
 
   stock: number;
 

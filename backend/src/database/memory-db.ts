@@ -49,6 +49,30 @@ export const users = [
   },
 ];
 
+export const categories = [
+  {
+    id: 'category-1',
+    name: 'Electronics',
+    slug: 'electronics',
+    tenantId: 'tenant-1',
+    createdAt: new Date(),
+  },
+  {
+    id: 'category-2',
+    name: 'Mobile',
+    slug: 'mobile',
+    tenantId: 'tenant-1',
+    createdAt: new Date(),
+  },
+  {
+    id: 'category-3',
+    name: 'Entertainment',
+    slug: 'entertainment',
+    tenantId: 'tenant-2',
+    createdAt: new Date(),
+  },
+];
+
 export const products = [
   {
     id: 'product-1',
@@ -57,7 +81,9 @@ export const products = [
 
     sku: 'SP-LAP-001',
 
-    category: 'Electronics',
+    categoryId: 'category-1',
+
+    categoryName: 'Electronics',
 
     stock: 12,
 
@@ -73,7 +99,9 @@ export const products = [
 
     sku: 'SP-PHN-001',
 
-    category: 'Mobile',
+    categoryId: 'category-2',
+
+    categoryName: 'Mobile',
 
     stock: 8,
 
@@ -89,7 +117,9 @@ export const products = [
 
     sku: 'NF-TV-001',
 
-    category: 'Entertainment',
+    categoryId: 'category-3',
+
+    categoryName: 'Entertainment',
 
     stock: 5,
 
@@ -98,3 +128,5 @@ export const products = [
     tenantId: 'tenant-2',
   },
 ];
+
+export const auditLogs: any[] = [];

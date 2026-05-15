@@ -175,6 +175,8 @@ import {
   LayoutDashboard,
   ShoppingBag,
   Home,
+  Tags as TagsIcon,
+  Activity as ActivityIcon,
   Menu as MenuIcon,
   Bell as BellIcon,
   LogOut as LogOutIcon,
@@ -210,6 +212,18 @@ const navItems = computed(() => {
       path: '/products',
       icon: ShoppingBag,
     },
+
+    {
+      name: 'Categories',
+      path: '/categories',
+      icon: TagsIcon,
+    },
+
+    {
+      name: 'Audit Logs',
+      path: '/audit-logs',
+      icon: ActivityIcon,
+    },
   ]
 
   // SUPERADMIN ONLY
@@ -231,14 +245,16 @@ const pageTitles = {
   home: 'Home',
   dashboard: 'Dashboard',
   products: 'Products',
+  categories: 'Categories',
   tenants: 'Tenants',
+  'audit-logs': 'Audit Logs',
 }
 
 const currentPageTitle = computed(() => pageTitles[route.name] || 'Nexora')
 
 // ─── Logout ───────────────────────────────────────────────────────────────
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.logout()
 
   showLogoutModal.value = false
 

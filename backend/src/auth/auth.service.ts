@@ -3,10 +3,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { users, tenants } from '../database/memory-db';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private auditService: AuditService,
+  ) {}
 
   // ─── LOGIN ────────────────────────────
   login(email: string, password: string) {
@@ -33,6 +37,14 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
+
+    this.auditService.log({
+      action: 'LOGIN_SUCCESS',
+      message: `${user.email} logged in`,
+      performedBy: user.email,
+      role: user.role,
+      tenantId: user.tenantId,
+    });
 
     return {
       accessToken,
@@ -75,6 +87,19 @@ export class AuthService {
       tenantId: user.tenantId,
 
       tenantName: tenant?.name || '',
+    };
+  }
+
+  logout(userPayload: any) {
+    const user = users.find((entry) => entry.id === userPayload.userId);
+
+    this.auditService.logForUser(userPayload, {
+      action: 'LOGOUT',
+      message: `${user?.email || userPayload.userId} logged out`,
+    });
+
+    return {
+      message: 'Logged out successfully',
     };
   }
 }

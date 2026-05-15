@@ -5,10 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { products, tenants, users } from '../database/memory-db';
+import { categories, products, tenants, users } from '../database/memory-db';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class TenantsService {
+  constructor(private auditService: AuditService) {}
+
   private ensureSuperadmin(user: any) {
     if (user.role !== 'superadmin') {
       throw new ForbiddenException('Access denied');
@@ -73,6 +76,12 @@ export class TenantsService {
     tenants.unshift(newTenant);
     users.unshift(tenantAdmin);
 
+    this.auditService.logForUser(user, {
+      action: 'TENANT_CREATED',
+      message: `Superadmin created tenant ${newTenant.name}`,
+      tenantId: newTenant.id,
+    });
+
     return {
       tenant: newTenant,
       adminCredentials: {
@@ -92,6 +101,14 @@ export class TenantsService {
     }
 
     tenant.active = !tenant.active;
+
+    this.auditService.logForUser(user, {
+      action: tenant.active ? 'TENANT_ACTIVATED' : 'TENANT_DEACTIVATED',
+      message: `Tenant ${tenant.name} was ${
+        tenant.active ? 'activated' : 'deactivated'
+      }`,
+      tenantId: tenant.id,
+    });
 
     return tenant;
   }
@@ -116,6 +133,12 @@ export class TenantsService {
       }
     }
 
+    for (let index = categories.length - 1; index >= 0; index -= 1) {
+      if (categories[index].tenantId === id) {
+        categories.splice(index, 1);
+      }
+    }
+
     let deletedUsers = 0;
     for (let index = users.length - 1; index >= 0; index -= 1) {
       if (users[index].tenantId === id) {
@@ -123,6 +146,12 @@ export class TenantsService {
         deletedUsers += 1;
       }
     }
+
+    this.auditService.logForUser(user, {
+      action: 'TENANT_DELETED',
+      message: `Superadmin deleted tenant ${deletedTenant.name}`,
+      tenantId: deletedTenant.id,
+    });
 
     return {
       message: 'Tenant deleted successfully',

@@ -13,16 +13,21 @@ export const useProductStore = defineStore('products', () => {
   const loading = ref(false)
   const error = ref('')
   const searchQuery = ref('')
+  const categoryFilter = ref('')
+  const tenantFilter = ref('')
 
   // ─── Getters ──────────────────────────────────────────────────────────────
   const filteredProducts = computed(() => {
-    if (!searchQuery.value) return products.value
     const q = searchQuery.value.toLowerCase()
+
     return products.value.filter(
-      (p) =>
-        p.name?.toLowerCase().includes(q) ||
-        p.sku?.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q)
+      (product) =>
+        (!tenantFilter.value || product.tenantId === tenantFilter.value) &&
+        (!categoryFilter.value || product.categoryId === categoryFilter.value) &&
+        (!q ||
+          product.name?.toLowerCase().includes(q) ||
+          product.sku?.toLowerCase().includes(q) ||
+          product.categoryName?.toLowerCase().includes(q))
     )
   })
 
@@ -89,6 +94,8 @@ export const useProductStore = defineStore('products', () => {
     loading,
     error,
     searchQuery,
+    categoryFilter,
+    tenantFilter,
     filteredProducts,
     loadProducts,
     addProduct,

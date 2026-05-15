@@ -7,6 +7,8 @@ const DashboardView = () => import('../views/DashboardView.vue')
 const ProductsView = () => import('../views/ProductsView.vue')
 const HomeView = () => import('../views/HomeView.vue')
 const TenantsView = () => import('../views/TenantsView.vue')
+const AuditLogsView = () => import('../views/AuditLogsView.vue')
+const CategoriesView = () => import('../views/CategoriesView.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -38,6 +40,11 @@ const router = createRouter({
           component: ProductsView,
         },
         {
+          path: 'categories',
+          name: 'categories',
+          component: CategoriesView,
+        },
+        {
           path: 'tenants',
           name: 'tenants',
           component: TenantsView,
@@ -45,6 +52,11 @@ const router = createRouter({
             requiresAuth: true,
             requiresRole: 'superadmin',
           },
+        },
+        {
+          path: 'audit-logs',
+          name: 'audit-logs',
+          component: AuditLogsView,
         },
       ],
     },

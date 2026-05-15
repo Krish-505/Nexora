@@ -3,6 +3,8 @@ export class UpdateProductDto {
 
   sku?: string;
 
+  categoryId?: string;
+
   category?: string;
 
   stock?: number;
