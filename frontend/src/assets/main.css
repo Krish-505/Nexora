@@ -10,22 +10,48 @@
 
 @layer base {
   :root {
+    --color-primary: #0ea5e9;
+    --color-primary-rgb: 14 165 233;
+    --color-accent: #22d3ee;
+    --color-accent-rgb: 34 211 238;
+    --sidebar-bg: linear-gradient(180deg, #020617, rgba(14, 165, 233, 0.48));
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --sidebar-text: rgba(226, 232, 240, 0.72);
+    --surface-bg: rgba(255, 255, 255, 0.88);
+    --surface-bg-strong: #ffffff;
+    --surface-border: rgba(148, 163, 184, 0.26);
+    --surface-muted: rgba(248, 250, 252, 0.86);
+    --card-shadow: 0 22px 64px rgba(15, 23, 42, 0.12);
+    --text-primary: #020617;
+    --text-secondary: #64748b;
+    --text-inverse: #ffffff;
+    --hover-accent: rgba(34, 211, 238, 0.12);
+    --glow-color: rgba(26, 191, 236, 0.24);
+    --radius-card: 18px;
+    --transition-speed: 220ms;
+    --app-bg:
+      radial-gradient(circle at 18% -10%, rgba(14, 165, 233, 0.12), transparent 32rem),
+      radial-gradient(circle at 88% 4%, rgba(16, 185, 129, 0.09), transparent 26rem),
+      linear-gradient(180deg, #fbfdff 0%, #f7f9fc 36%, #f8fafc 100%);
+    --focus-ring: 0 0 0 4px rgba(14, 165, 233, 0.16);
+    --primary-soft: rgba(224, 242, 254, 0.95);
+    --accent-soft: rgba(207, 250, 254, 0.92);
     --nx-bg: #f7f9fc;
-    --nx-surface: rgba(255, 255, 255, 0.86);
-    --nx-surface-strong: #ffffff;
-    --nx-border: rgba(148, 163, 184, 0.26);
+    --nx-surface: var(--surface-bg);
+    --nx-surface-strong: var(--surface-bg-strong);
+    --nx-border: var(--surface-border);
     --nx-border-strong: rgba(100, 116, 139, 0.28);
-    --nx-text: #0f172a;
-    --nx-muted: #64748b;
+    --nx-text: var(--text-primary);
+    --nx-muted: var(--text-secondary);
     --nx-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-    --nx-shadow-md: 0 14px 40px rgba(15, 23, 42, 0.09);
-    --nx-shadow-lg: 0 28px 80px rgba(15, 23, 42, 0.16);
+    --nx-shadow-md: var(--card-shadow);
+    --nx-shadow-lg: var(--card-shadow);
     --nx-radius-sm: 10px;
     --nx-radius-md: 14px;
-    --nx-radius-lg: 18px;
+    --nx-radius-lg: var(--radius-card);
     --nx-ease: cubic-bezier(0.22, 1, 0.36, 1);
     --nx-duration-fast: 140ms;
-    --nx-duration: 220ms;
+    --nx-duration: var(--transition-speed);
     --nx-duration-slow: 420ms;
   }
 
@@ -40,13 +66,38 @@
 
   body {
     min-height: 100vh;
-    background:
-      radial-gradient(circle at 18% -10%, rgba(14, 165, 233, 0.12), transparent 32rem),
-      radial-gradient(circle at 88% 4%, rgba(16, 185, 129, 0.09), transparent 26rem),
-      linear-gradient(180deg, #fbfdff 0%, var(--nx-bg) 36%, #f8fafc 100%);
+    background: var(--app-bg);
     color: var(--nx-text);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    transition:
+      background var(--nx-duration-slow) var(--nx-ease),
+      color var(--nx-duration) var(--nx-ease);
+  }
+
+  body,
+  button,
+  input,
+  select,
+  textarea,
+  a,
+  table,
+  div,
+  section,
+  aside,
+  header,
+  article {
+    transition-property:
+      background-color,
+      background,
+      border-color,
+      box-shadow,
+      color,
+      opacity,
+      transform,
+      filter;
+    transition-duration: var(--transition-speed);
+    transition-timing-function: var(--nx-ease);
   }
 }
 
@@ -62,6 +113,58 @@
     background: var(--nx-surface-strong);
     border: 1px solid var(--nx-border);
     box-shadow: var(--nx-shadow-md);
+  }
+
+  .nx-themed-sidebar {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    color: var(--sidebar-text);
+    box-shadow: 22px 0 80px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(22px);
+  }
+
+  .nx-themed-topbar {
+    background: color-mix(in srgb, var(--surface-bg-strong) 82%, transparent);
+    border-bottom: 1px solid var(--surface-border);
+    backdrop-filter: blur(18px);
+  }
+
+  .nx-text-primary {
+    color: var(--text-primary);
+  }
+
+  .nx-text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .nx-token-button-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    color: var(--text-inverse);
+    box-shadow: 0 16px 42px var(--glow-color);
+  }
+
+  .nx-token-button-primary:hover {
+    box-shadow: 0 22px 58px var(--glow-color);
+  }
+
+  .nx-token-button-secondary {
+    background: var(--surface-bg);
+    color: var(--text-primary);
+    border-color: var(--surface-border);
+  }
+
+  .nx-token-button-secondary:hover {
+    background: var(--hover-accent);
+  }
+
+  .nx-themed-field {
+    background: var(--surface-bg);
+    border-color: var(--surface-border);
+    color: var(--text-primary);
+  }
+
+  .nx-themed-field::placeholder {
+    color: color-mix(in srgb, var(--text-secondary) 78%, transparent);
   }
 
   .nx-card-hover {

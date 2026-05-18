@@ -49,13 +49,13 @@ const sizeClasses = {
 
 const variantClasses = {
   primary:
-    'bg-slate-950 text-white shadow-[0_10px_28px_rgba(15,23,42,0.22)] hover:-translate-y-0.5 hover:bg-slate-900 hover:shadow-[0_18px_44px_rgba(15,23,42,0.24)] focus:ring-sky-500/20',
+    'nx-token-button-primary border border-white/10 hover:-translate-y-0.5 focus:ring-[rgba(var(--color-primary-rgb)/0.20)]',
   secondary:
-    'border border-slate-200 bg-white/80 text-slate-900 shadow-sm backdrop-blur hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-md focus:ring-slate-500/15',
+    'nx-token-button-secondary border shadow-sm backdrop-blur hover:-translate-y-0.5 hover:shadow-md focus:ring-[rgba(var(--color-primary-rgb)/0.14)]',
   outline:
-    'border border-slate-200 bg-white/60 text-slate-700 shadow-sm backdrop-blur hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:text-slate-950 hover:shadow-md focus:ring-sky-500/15',
+    'border bg-transparent text-[var(--text-primary)] shadow-sm backdrop-blur hover:-translate-y-0.5 hover:bg-[var(--hover-accent)] hover:shadow-md focus:ring-[rgba(var(--color-primary-rgb)/0.14)] border-[var(--surface-border)]',
   ghost:
-    'text-slate-600 hover:bg-slate-100/80 hover:text-slate-950 focus:ring-slate-500/10',
+    'text-[var(--text-secondary)] hover:bg-[var(--hover-accent)] hover:text-[var(--text-primary)] focus:ring-[rgba(var(--color-primary-rgb)/0.10)]',
   danger:
     'bg-red-600 text-white shadow-[0_10px_26px_rgba(220,38,38,0.2)] hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-[0_18px_42px_rgba(220,38,38,0.24)] focus:ring-red-500/20',
 }

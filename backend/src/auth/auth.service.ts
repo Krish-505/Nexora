@@ -59,6 +59,8 @@ export class AuthService {
         tenantId: user.tenantId,
 
         tenantName: tenant?.name || '',
+
+        theme: tenant?.theme || null,
       },
     };
   }
@@ -87,6 +89,8 @@ export class AuthService {
       tenantId: user.tenantId,
 
       tenantName: tenant?.name || '',
+
+      theme: tenant?.theme || null,
     };
   }
 

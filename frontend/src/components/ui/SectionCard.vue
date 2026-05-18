@@ -2,12 +2,12 @@
   <section class="nx-surface-strong nx-card-hover rounded-2xl">
     <div
       v-if="$slots.header || title"
-      class="flex items-center justify-between gap-4 border-b border-slate-200/70 px-5 py-4"
+      class="flex items-center justify-between gap-4 border-b border-[var(--surface-border)] px-5 py-4"
     >
       <slot name="header">
         <div>
-          <h2 class="text-base font-bold text-slate-900">{{ title }}</h2>
-          <p v-if="description" class="mt-1 text-sm text-slate-500">{{ description }}</p>
+          <h2 class="text-base font-bold text-[var(--text-primary)]">{{ title }}</h2>
+          <p v-if="description" class="mt-1 text-sm text-[var(--text-secondary)]">{{ description }}</p>
         </div>
         <slot name="action" />
       </slot>

@@ -1,3 +1,5 @@
+import { createDefaultTenantTheme } from './theme-defaults';
+
 export const tenants = [
   {
     id: 'tenant-1',
@@ -7,6 +9,8 @@ export const tenants = [
     slug: 'spotify',
 
     active: true,
+
+    theme: createDefaultTenantTheme(),
 
     createdAt: new Date(),
   },
@@ -19,6 +23,8 @@ export const tenants = [
     slug: 'netflix',
 
     active: true,
+
+    theme: createDefaultTenantTheme(),
 
     createdAt: new Date(),
   },

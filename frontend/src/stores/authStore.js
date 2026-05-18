@@ -5,6 +5,7 @@ import {
   login as loginService,
   logout as logoutService,
 } from '../services/authService'
+import { useThemeStore } from './themeStore'
 
 const getStoredAuthError = () => {
   const message = sessionStorage.getItem('auth:error') || ''
@@ -43,6 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
   const clearSession = ({ preserveError = false } = {}) => {
     user.value = null
     token.value = null
+    useThemeStore().resetToPlatform()
 
     if (!preserveError) {
       error.value = ''
@@ -53,11 +55,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const initAuth = async () => {
-    if (!token.value) return
+    if (!token.value) {
+      useThemeStore().resetToPlatform()
+      return
+    }
 
     try {
       loading.value = true
       user.value = await getProfile()
+      useThemeStore().initializeForUser(user.value)
     } catch {
       if (token.value) {
         clearSession()
@@ -78,6 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = response.accessToken
       user.value = response.user
       localStorage.setItem('token', response.accessToken)
+      useThemeStore().initializeForUser(response.user)
 
       return response
     } catch (err) {

@@ -5,6 +5,7 @@ import {
   deleteTenant,
   getTenants,
   toggleTenant,
+  updateTenantTheme,
 } from '../services/tenantService'
 
 export const useTenantStore = defineStore('tenant', () => {
@@ -79,6 +80,22 @@ export const useTenantStore = defineStore('tenant', () => {
     }
   }
 
+  const updateTheme = async (id, theme) => {
+    try {
+      setProcessing(id, true)
+      const updatedTenant = await updateTenantTheme(id, theme)
+      const index = tenants.value.findIndex((tenant) => tenant.id === id)
+
+      if (index !== -1) {
+        tenants.value[index] = updatedTenant
+      }
+
+      return updatedTenant
+    } finally {
+      setProcessing(id, false)
+    }
+  }
+
   return {
     tenants,
     loading,
@@ -90,5 +107,6 @@ export const useTenantStore = defineStore('tenant', () => {
     addTenant,
     toggleTenantStatus,
     removeTenant,
+    updateTheme,
   }
 })

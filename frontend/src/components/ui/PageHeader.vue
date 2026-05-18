@@ -3,14 +3,14 @@
     <div class="max-w-3xl">
       <p
         v-if="eyebrow"
-        class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500"
+        class="text-xs font-bold uppercase tracking-[0.22em] text-[var(--text-secondary)]"
       >
         {{ eyebrow }}
       </p>
-      <h1 class="mt-2 text-3xl font-black tracking-normal text-slate-950 sm:text-4xl">
+      <h1 class="mt-2 text-3xl font-black tracking-normal text-[var(--text-primary)] sm:text-4xl">
         {{ title }}
       </h1>
-      <p v-if="description" class="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
+      <p v-if="description" class="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
         {{ description }}
       </p>
     </div>

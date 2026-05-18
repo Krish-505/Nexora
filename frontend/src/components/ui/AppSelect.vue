@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-1.5">
-    <label v-if="label" :for="id" class="text-sm font-semibold text-slate-700">
+    <label v-if="label" :for="id" class="text-sm font-semibold text-[var(--text-primary)]">
       {{ label }}
     </label>
     <div class="relative">
@@ -8,7 +8,7 @@
         :id="id"
         :value="modelValue"
         :class="[
-          'nx-focus h-10 w-full appearance-none rounded-xl border bg-white/75 px-3 pr-9 text-sm text-slate-800 shadow-sm backdrop-blur',
+          'nx-focus nx-themed-field h-10 w-full appearance-none rounded-xl border px-3 pr-9 text-sm shadow-sm backdrop-blur',
           error ? 'border-red-300 focus:border-red-400 focus:ring-red-500/15' : 'border-slate-200',
         ]"
         v-bind="$attrs"

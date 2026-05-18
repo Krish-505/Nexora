@@ -4,21 +4,23 @@
     :style="{ transitionDelay: `${delay}ms` }"
   >
     <div
-      class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--color-accent)] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
     />
     <div class="flex items-start justify-between gap-3">
       <div>
-        <p class="text-sm font-semibold text-slate-500">{{ label }}</p>
-        <p class="mt-3 text-3xl font-black tracking-normal text-slate-950">{{ value }}</p>
+        <p class="text-sm font-semibold text-[var(--text-secondary)]">{{ label }}</p>
+        <p class="mt-3 text-3xl font-black tracking-normal text-[var(--text-primary)]">{{ value }}</p>
       </div>
-      <div class="rounded-xl p-2.5 ring-1" :class="iconClass">
+      <div
+        class="rounded-xl p-2.5 text-[var(--color-primary)] ring-1 ring-[rgba(var(--color-primary-rgb)/0.18)]"
+        :style="{ background: 'var(--primary-soft)' }"
+      >
         <component :is="icon" class="h-4 w-4" />
       </div>
     </div>
-    <div class="mt-5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+    <div class="mt-5 h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
       <div
-        class="h-full rounded-full transition-all duration-700 ease-out"
-        :class="barClass"
+        class="h-full rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] transition-all duration-700 ease-out"
         :style="{ width: `${progress}%` }"
       />
     </div>

@@ -3,13 +3,23 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppInput from '../components/ui/AppInput.vue'
 import AppModal from '../components/ui/AppModal.vue'
+import AppSelect from '../components/ui/AppSelect.vue'
 import AppTable from '../components/ui/AppTable.vue'
 import { useNotificationStore } from '../stores/notificationStore'
 import { useTenantStore } from '../stores/tenantStore'
+import { useThemeStore } from '../stores/themeStore'
+import {
+  defaultTenantTheme,
+  normalizeTheme,
+  SIDEBAR_STYLES,
+  SURFACE_STYLES,
+  THEME_MODES,
+} from '../services/themeService'
 import {
   AlertTriangle as AlertTriangleIcon,
   Building2 as BuildingIcon,
   Copy as CopyIcon,
+  Palette as PaletteIcon,
   Plus as PlusIcon,
   RefreshCw as RefreshCwIcon,
   ShieldCheck as ShieldCheckIcon,
@@ -19,6 +29,7 @@ import {
 
 const tenantStore = useTenantStore()
 const notificationStore = useNotificationStore()
+const themeStore = useThemeStore()
 
 const columns = [
   { key: 'name', label: 'Tenant' },
@@ -30,8 +41,10 @@ const columns = [
 
 const createModalOpen = ref(false)
 const deleteModalOpen = ref(false)
+const themeModalOpen = ref(false)
 const createdAdmin = ref(null)
 const selectedTenant = ref(null)
+const selectedThemeTenant = ref(null)
 
 const form = reactive({
   name: '',
@@ -41,6 +54,20 @@ const form = reactive({
 const formErrors = reactive({
   name: '',
   slug: '',
+})
+
+const themeForm = reactive({
+  primaryColor: defaultTenantTheme.primaryColor,
+  accentColor: defaultTenantTheme.accentColor,
+  mode: defaultTenantTheme.mode,
+  sidebarStyle: defaultTenantTheme.sidebarStyle,
+  surfaceStyle: defaultTenantTheme.surfaceStyle,
+  logo: '',
+})
+
+const themeErrors = reactive({
+  primaryColor: '',
+  accentColor: '',
 })
 
 const tenantCountLabel = computed(() =>
@@ -73,6 +100,32 @@ const openDeleteModal = (tenant) => {
 const closeDeleteModal = () => {
   deleteModalOpen.value = false
   selectedTenant.value = null
+}
+
+const assignThemeForm = (theme) => {
+  const normalized = normalizeTheme(theme || defaultTenantTheme)
+
+  themeForm.primaryColor = normalized.primaryColor
+  themeForm.accentColor = normalized.accentColor
+  themeForm.mode = normalized.mode
+  themeForm.sidebarStyle = normalized.sidebarStyle
+  themeForm.surfaceStyle = normalized.surfaceStyle
+  themeForm.logo = normalized.logo
+  themeErrors.primaryColor = ''
+  themeErrors.accentColor = ''
+}
+
+const openThemeModal = (tenant) => {
+  selectedThemeTenant.value = tenant
+  assignThemeForm(tenant.theme)
+  themeModalOpen.value = true
+  themeStore.applyPreview(themeForm, { brandName: tenant.name })
+}
+
+const closeThemeModal = () => {
+  themeModalOpen.value = false
+  selectedThemeTenant.value = null
+  themeStore.restoreCommitted({ brandName: 'Nexora' })
 }
 
 const validateForm = () => {
@@ -143,6 +196,39 @@ const confirmDelete = async () => {
   }
 }
 
+const validateTheme = () => {
+  const colorPattern = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
+
+  themeErrors.primaryColor = colorPattern.test(themeForm.primaryColor)
+    ? ''
+    : 'Use a valid hex color.'
+  themeErrors.accentColor = colorPattern.test(themeForm.accentColor)
+    ? ''
+    : 'Use a valid hex color.'
+
+  return !themeErrors.primaryColor && !themeErrors.accentColor
+}
+
+const saveTenantTheme = async () => {
+  if (!selectedThemeTenant.value || !validateTheme()) return
+
+  try {
+    const updatedTenant = await tenantStore.updateTheme(selectedThemeTenant.value.id, {
+      primaryColor: themeForm.primaryColor,
+      accentColor: themeForm.accentColor,
+      mode: themeForm.mode,
+      sidebarStyle: themeForm.sidebarStyle,
+      surfaceStyle: themeForm.surfaceStyle,
+      logo: themeForm.logo,
+    })
+
+    notificationStore.success(`Theme updated for ${updatedTenant.name}.`)
+    closeThemeModal()
+  } catch (error) {
+    notificationStore.error(error?.response?.data?.message || 'Failed to update tenant theme.')
+  }
+}
+
 const refreshTenants = async () => {
   try {
     await tenantStore.fetchTenants()
@@ -173,6 +259,23 @@ watch(createModalOpen, (isOpen) => {
 watch(deleteModalOpen, (isOpen) => {
   if (!isOpen) {
     selectedTenant.value = null
+  }
+})
+
+watch(
+  themeForm,
+  () => {
+    if (themeModalOpen.value && selectedThemeTenant.value) {
+      themeStore.applyPreview(themeForm, { brandName: selectedThemeTenant.value.name })
+    }
+  },
+  { deep: true }
+)
+
+watch(themeModalOpen, (isOpen) => {
+  if (!isOpen && selectedThemeTenant.value) {
+    themeStore.restoreCommitted({ brandName: 'Nexora' })
+    selectedThemeTenant.value = null
   }
 })
 
@@ -334,6 +437,15 @@ onMounted(() => {
             <Trash2Icon class="mr-1.5 h-3.5 w-3.5" />
             Delete
           </AppButton>
+          <AppButton
+            size="sm"
+            variant="outline"
+            :loading="tenantStore.isProcessing(row.id)"
+            @click="openThemeModal(row)"
+          >
+            <PaletteIcon class="mr-1.5 h-3.5 w-3.5" />
+            Theme
+          </AppButton>
         </div>
       </template>
     </AppTable>
@@ -448,6 +560,119 @@ onMounted(() => {
         @click="confirmDelete"
       >
         Delete Tenant
+      </AppButton>
+    </template>
+  </AppModal>
+
+  <AppModal v-model="themeModalOpen" title="Tenant Theme Settings" max-width="820px">
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div class="space-y-5">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-[var(--text-primary)]">Primary Color</label>
+            <div class="flex gap-3">
+              <input
+                v-model="themeForm.primaryColor"
+                type="color"
+                class="h-10 w-12 rounded-xl border border-[var(--surface-border)] bg-transparent p-1"
+              />
+              <AppInput v-model="themeForm.primaryColor" :error="themeErrors.primaryColor" />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-[var(--text-primary)]">Accent Color</label>
+            <div class="flex gap-3">
+              <input
+                v-model="themeForm.accentColor"
+                type="color"
+                class="h-10 w-12 rounded-xl border border-[var(--surface-border)] bg-transparent p-1"
+              />
+              <AppInput v-model="themeForm.accentColor" :error="themeErrors.accentColor" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <AppSelect v-model="themeForm.mode" label="Mode">
+            <option v-for="mode in THEME_MODES" :key="mode" :value="mode">
+              {{ mode }}
+            </option>
+          </AppSelect>
+
+          <AppSelect v-model="themeForm.sidebarStyle" label="Sidebar">
+            <option v-for="style in SIDEBAR_STYLES" :key="style" :value="style">
+              {{ style }}
+            </option>
+          </AppSelect>
+
+          <AppSelect v-model="themeForm.surfaceStyle" label="Surface">
+            <option v-for="style in SURFACE_STYLES" :key="style" :value="style">
+              {{ style }}
+            </option>
+          </AppSelect>
+        </div>
+
+        <AppInput
+          v-model="themeForm.logo"
+          label="Logo URL"
+          placeholder="https://example.com/logo.png"
+        />
+      </div>
+
+      <div class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--surface-border)] bg-[var(--surface-bg)] shadow-[var(--card-shadow)]">
+        <div class="border-b border-[var(--surface-border)] px-4 py-3">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+            Live Preview
+          </p>
+          <p class="mt-1 text-sm font-bold text-[var(--text-primary)]">
+            {{ selectedThemeTenant?.name || 'Tenant' }}
+          </p>
+        </div>
+        <div class="space-y-4 p-4">
+          <div class="flex items-center gap-3 rounded-2xl p-3" :style="{ background: 'var(--sidebar-bg)' }">
+            <img
+              v-if="themeForm.logo"
+              :src="themeForm.logo"
+              alt=""
+              class="h-9 w-9 rounded-xl object-cover"
+            />
+            <div
+              v-else
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-sm font-black text-white"
+            >
+              {{ selectedThemeTenant?.name?.[0] || 'T' }}
+            </div>
+            <div>
+              <p class="text-sm font-bold text-white">{{ selectedThemeTenant?.name }}</p>
+              <p class="text-xs text-white/60">{{ themeForm.sidebarStyle }} sidebar</p>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-bg)] p-4">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+              Workspace
+            </p>
+            <p class="mt-2 text-2xl font-black text-[var(--text-primary)]">Inventory Pulse</p>
+            <div class="mt-4 h-2 rounded-full bg-[var(--surface-muted)]">
+              <div class="h-full w-2/3 rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]" />
+            </div>
+          </div>
+
+          <AppButton class="w-full">
+            Preview Action
+          </AppButton>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <AppButton variant="ghost" @click="closeThemeModal">Cancel</AppButton>
+      <AppButton
+        :loading="selectedThemeTenant ? tenantStore.isProcessing(selectedThemeTenant.id) : false"
+        @click="saveTenantTheme"
+      >
+        Save Theme
       </AppButton>
     </template>
   </AppModal>

@@ -10,13 +10,13 @@
         <Transition name="modal-panel" appear>
           <div
             v-if="modelValue"
-            class="relative w-full overflow-hidden rounded-2xl border border-white/70 bg-white/92 shadow-[0_30px_90px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/5 backdrop-blur-2xl"
+            class="nx-surface-strong relative w-full overflow-hidden rounded-[var(--radius-card)] backdrop-blur-2xl"
             :style="{ maxWidth }"
           >
             <div
-              class="flex items-center justify-between border-b border-slate-200/70 bg-gradient-to-b from-white to-slate-50/80 px-6 py-4"
+              class="flex items-center justify-between border-b border-[var(--surface-border)] bg-[var(--surface-muted)] px-6 py-4"
             >
-              <h3 class="text-base font-bold text-slate-900">{{ title }}</h3>
+              <h3 class="text-base font-bold text-[var(--text-primary)]">{{ title }}</h3>
               <button
                 class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:scale-95"
                 @click="$emit('update:modelValue', false)"
@@ -31,7 +31,7 @@
 
             <div
               v-if="$slots.footer"
-              class="flex justify-end gap-3 border-t border-slate-200/70 bg-slate-50/80 px-6 py-4"
+              class="flex justify-end gap-3 border-t border-[var(--surface-border)] bg-[var(--surface-muted)] px-6 py-4"
             >
               <slot name="footer" />
             </div>

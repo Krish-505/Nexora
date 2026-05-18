@@ -15,16 +15,23 @@
         'lg:translate-x-0 lg:static lg:inset-0',
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
       ]"
-      class="bg-slate-950 shadow-[22px_0_80px_rgba(15,23,42,0.18)]"
+      class="nx-themed-sidebar"
     >
       <!-- Brand / Logo -->
       <div class="flex items-center gap-3 h-16 px-5 border-b border-white/10 shrink-0">
+        <img
+          v-if="themeStore.logo"
+          :src="themeStore.logo"
+          :alt="`${themeStore.brandName} logo`"
+          class="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-white/15"
+        />
         <div
-          class="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center shadow-[0_10px_30px_rgba(14,165,233,0.28)] shrink-0"
+          v-else
+          class="w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center shadow-[0_10px_30px_var(--glow-color)] shrink-0"
         >
           <ZapIcon class="w-4 h-4 text-white" />
         </div>
-        <span class="text-white font-bold text-lg tracking-tight truncate">Nexora</span>
+        <span class="text-white font-bold text-lg tracking-tight truncate">{{ themeStore.brandName }}</span>
       </div>
 
       <!-- Navigation -->
@@ -34,12 +41,12 @@
           :key="item.path"
           :to="item.path"
           :exact="item.exact"
-          class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 font-semibold text-sm transition-all duration-200 hover:bg-white/7 hover:text-white group active:scale-[0.99]"
-          active-class="bg-white/10 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+          class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-[var(--hover-accent)] hover:text-white group active:scale-[0.99]"
+          active-class="bg-[rgba(var(--color-primary-rgb)/0.16)] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
           @click="isMobileMenuOpen = false"
         >
           <span
-            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-sky-400 opacity-0 shadow-[0_0_18px_rgba(56,189,248,0.75)] transition-opacity duration-200 group-[.router-link-active]:opacity-100"
+            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[var(--color-accent)] opacity-0 shadow-[0_0_18px_var(--glow-color)] transition-opacity duration-200 group-[.router-link-active]:opacity-100"
           />
           <component
             :is="item.icon"
@@ -100,7 +107,7 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <!-- Top Navbar -->
       <header
-        class="h-16 bg-white/82 backdrop-blur-xl border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-sm z-10"
+        class="nx-themed-topbar h-16 flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-sm z-10"
       >
         <!-- Mobile hamburger -->
         <button
@@ -112,7 +119,7 @@
 
         <!-- Page breadcrumb / title spacer -->
         <div class="hidden lg:flex items-center gap-2 text-sm text-slate-500">
-          <span class="font-semibold text-slate-800">{{ currentPageTitle }}</span>
+          <span class="font-semibold text-[var(--text-primary)]">{{ currentPageTitle }}</span>
         </div>
 
         <!-- Right side controls -->
@@ -123,7 +130,7 @@
             :class="
               authStore.isSuperadmin
                 ? 'bg-amber-50 border-amber-200 text-amber-700'
-                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                : 'bg-[var(--primary-soft)] border-[rgba(var(--color-primary-rgb)/0.24)] text-[var(--color-primary)]'
             "
           >
             <ShieldCheckIcon v-if="authStore.isSuperadmin" class="w-3 h-3" />
@@ -177,6 +184,7 @@
 import { ref, computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
+import { useThemeStore } from '../stores/themeStore'
 import BaseModal from '../components/BaseModal.vue'
 import {
   LayoutDashboard,
@@ -193,6 +201,7 @@ import {
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 const router = useRouter()
 const route = useRoute()
 const isMobileMenuOpen = ref(false)

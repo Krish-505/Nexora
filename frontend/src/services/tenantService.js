@@ -1,4 +1,5 @@
 import apiClient from './apiClient'
+import { updateTenantThemeApi } from './themeService'
 
 export const getTenants = async () => {
   const response = await apiClient.get('/tenants')
@@ -23,3 +24,5 @@ export const deleteTenant = async (id) => {
 
   return response.data
 }
+
+export const updateTenantTheme = updateTenantThemeApi
