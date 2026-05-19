@@ -12,7 +12,11 @@ import { AuditService } from '../audit/audit.service';
 export class ProductsService {
   constructor(private auditService: AuditService) {}
 
-  private resolveCategoryForProduct(user: any, body: any, currentTenantId: string) {
+  private resolveCategoryForProduct(
+    user: any,
+    body: any,
+    currentTenantId: string,
+  ) {
     const category = body.categoryId
       ? categories.find((entry) => entry.id === body.categoryId)
       : categories.find(

@@ -269,13 +269,17 @@
         <!-- SKU + Category row -->
         <div class="grid grid-cols-2 gap-3">
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-slate-700">SKU</label>
+            <label class="block text-sm font-medium text-slate-700">
+              SKU <span class="text-red-500">*</span>
+            </label>
             <input
               v-model="formData.sku"
               type="text"
               placeholder="e.g. WH-001"
               class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
+              :class="{ 'border-red-300': formErrors.sku }"
             />
+            <p v-if="formErrors.sku" class="text-xs text-red-600">{{ formErrors.sku }}</p>
           </div>
           <div class="space-y-1.5">
             <label class="block text-sm font-medium text-slate-700">
@@ -304,7 +308,9 @@
         <!-- Price + Stock row -->
         <div class="grid grid-cols-2 gap-3">
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-slate-700">Price ($)</label>
+            <label class="block text-sm font-medium text-slate-700">
+              Price ($) <span class="text-red-500">*</span>
+            </label>
             <input
               v-model.number="formData.price"
               type="number"
@@ -312,17 +318,23 @@
               step="0.01"
               placeholder="0.00"
               class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
+              :class="{ 'border-red-300': formErrors.price }"
             />
+            <p v-if="formErrors.price" class="text-xs text-red-600">{{ formErrors.price }}</p>
           </div>
           <div class="space-y-1.5">
-            <label class="block text-sm font-medium text-slate-700">Stock</label>
+            <label class="block text-sm font-medium text-slate-700">
+              Stock <span class="text-red-500">*</span>
+            </label>
             <input
               v-model.number="formData.stock"
               type="number"
               min="0"
               placeholder="0"
               class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors"
+              :class="{ 'border-red-300': formErrors.stock }"
             />
+            <p v-if="formErrors.stock" class="text-xs text-red-600">{{ formErrors.stock }}</p>
           </div>
         </div>
       </div>
@@ -457,7 +469,20 @@ const closeModal = () => {
 const validate = () => {
   const errors = {}
   if (!formData.value.name?.trim()) errors.name = 'Product name is required.'
+  if (!formData.value.sku?.trim()) errors.sku = 'SKU is required.'
   if (!formData.value.categoryId) errors.categoryId = 'Select a category.'
+  if (formData.value.price === null || formData.value.price === '' || Number.isNaN(formData.value.price)) {
+    errors.price = 'Price is required.'
+  } else if (Number(formData.value.price) < 0) {
+    errors.price = 'Price cannot be negative.'
+  }
+  if (formData.value.stock === null || formData.value.stock === '' || Number.isNaN(formData.value.stock)) {
+    errors.stock = 'Stock is required.'
+  } else if (!Number.isInteger(Number(formData.value.stock))) {
+    errors.stock = 'Stock must be a whole number.'
+  } else if (Number(formData.value.stock) < 0) {
+    errors.stock = 'Stock cannot be negative.'
+  }
   formErrors.value = errors
   return Object.keys(errors).length === 0
 }

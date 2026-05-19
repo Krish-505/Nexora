@@ -163,9 +163,10 @@
         label="Slug"
         placeholder="accessories"
         :error="formErrors.slug"
+        readonly
       />
       <p class="text-xs text-slate-500">
-        Slugs must be unique inside your tenant workspace.
+        Slug is generated automatically from the category name.
       </p>
     </div>
 
@@ -187,7 +188,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import AppButton from '../components/ui/AppButton.vue'
 import AppInput from '../components/ui/AppInput.vue'
 import AppModal from '../components/ui/AppModal.vue'
@@ -238,6 +239,13 @@ const normalizeSlug = (value) =>
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, '-')
     .replace(/^-+|-+$/g, '')
+
+watch(
+  () => form.name,
+  (value) => {
+    form.slug = normalizeSlug(value || '')
+  }
+)
 
 const resetForm = () => {
   form.name = ''

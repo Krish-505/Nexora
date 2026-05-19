@@ -264,6 +264,7 @@ const pageTitles = {
   categories: 'Categories',
   tenants: 'Tenants',
   'audit-logs': 'Audit Logs',
+  'not-found': 'Page Not Found',
 }
 
 const currentPageTitle = computed(() => pageTitles[route.name] || 'Nexora')

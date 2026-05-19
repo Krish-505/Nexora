@@ -9,6 +9,7 @@ const HomeView = () => import('../views/HomeView.vue')
 const TenantsView = () => import('../views/TenantsView.vue')
 const AuditLogsView = () => import('../views/AuditLogsView.vue')
 const CategoriesView = () => import('../views/CategoriesView.vue')
+const NotFoundView = () => import('../views/NotFoundView.vue')
 
 const router = createRouter({
   history: createWebHistory(),
@@ -18,6 +19,11 @@ const router = createRouter({
       name: 'login',
       component: LoginView,
       meta: { requiresGuest: true },
+    },
+    {
+      path: '/404',
+      name: 'public-not-found',
+      component: NotFoundView,
     },
     {
       path: '/',
@@ -58,11 +64,20 @@ const router = createRouter({
           name: 'audit-logs',
           component: AuditLogsView,
         },
+        {
+          path: 'not-found',
+          name: 'not-found',
+          component: NotFoundView,
+        },
       ],
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/',
+      redirect: () => {
+        const authStore = useAuthStore()
+
+        return authStore.token ? { name: 'not-found' } : { name: 'public-not-found' }
+      },
     },
   ],
 })
