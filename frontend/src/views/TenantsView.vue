@@ -119,7 +119,7 @@ const openThemeModal = (tenant) => {
   selectedThemeTenant.value = tenant
   assignThemeForm(tenant.theme)
   themeModalOpen.value = true
-  themeStore.applyPreview(themeForm, { brandName: tenant.name })
+  themeStore.applyPreview(themeForm, { brandName: tenant.name, tenantId: tenant.id })
 }
 
 const closeThemeModal = () => {
@@ -266,7 +266,10 @@ watch(
   themeForm,
   () => {
     if (themeModalOpen.value && selectedThemeTenant.value) {
-      themeStore.applyPreview(themeForm, { brandName: selectedThemeTenant.value.name })
+      themeStore.applyPreview(themeForm, {
+        brandName: selectedThemeTenant.value.name,
+        tenantId: selectedThemeTenant.value.id,
+      })
     }
   },
   { deep: true }

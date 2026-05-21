@@ -75,6 +75,10 @@
       color var(--nx-duration) var(--nx-ease);
   }
 
+  :root[data-theme-sync='live'] body {
+    animation: nx-theme-sync 520ms var(--nx-ease) both;
+  }
+
   body,
   button,
   input,
@@ -253,5 +257,19 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes nx-theme-sync {
+  0% {
+    filter: saturate(0.96) brightness(1);
+  }
+
+  45% {
+    filter: saturate(1.06) brightness(1.015);
+  }
+
+  100% {
+    filter: saturate(1) brightness(1);
   }
 }

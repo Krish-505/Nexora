@@ -23,6 +23,7 @@ export const defaultTenantTheme = {
 }
 
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
+let themeSyncTimer = null
 
 const clamp = (value, min = 0, max = 255) => Math.min(Math.max(Math.round(value), min), max)
 
@@ -167,6 +168,14 @@ export const applyThemeTokens = (theme, metadata = {}) => {
   root.dataset.sidebarStyle = normalized.sidebarStyle
   root.dataset.surfaceStyle = normalized.surfaceStyle
   root.dataset.brandName = metadata.brandName || 'Nexora'
+
+  if (metadata.realtime) {
+    root.dataset.themeSync = 'live'
+    window.clearTimeout(themeSyncTimer)
+    themeSyncTimer = window.setTimeout(() => {
+      delete root.dataset.themeSync
+    }, 520)
+  }
 
   return normalized
 }

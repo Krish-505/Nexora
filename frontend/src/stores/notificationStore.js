@@ -36,6 +36,7 @@ const messageFromEvent = (event) => {
   const entity =
     payload.product?.name ||
     payload.category?.name ||
+    payload.tenantName ||
     payload.tenant?.name ||
     payload.auditLog?.message ||
     'Workspace activity'

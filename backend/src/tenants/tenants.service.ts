@@ -202,7 +202,9 @@ export class TenantsService {
       },
       timestamp: new Date().toISOString(),
       payload: {
-        tenant,
+        tenantId: tenant.id,
+        tenantName: tenant.name,
+        theme: tenant.theme,
       },
     });
 

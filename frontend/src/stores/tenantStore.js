@@ -96,6 +96,25 @@ export const useTenantStore = defineStore('tenant', () => {
     }
   }
 
+  const applyRealtimeThemeUpdate = (event) => {
+    const payload = event?.payload || {}
+    const tenantId = event?.tenantId || payload.tenantId || payload.tenant?.id
+    const nextTheme = payload.theme || payload.tenant?.theme
+
+    if (!tenantId || !nextTheme) return
+
+    tenants.value = tenants.value.map((tenant) => {
+      if (tenant.id !== tenantId) return tenant
+
+      return {
+        ...tenant,
+        ...(payload.tenant || {}),
+        name: payload.tenantName || tenant.name,
+        theme: nextTheme,
+      }
+    })
+  }
+
   return {
     tenants,
     loading,
@@ -108,5 +127,6 @@ export const useTenantStore = defineStore('tenant', () => {
     toggleTenantStatus,
     removeTenant,
     updateTheme,
+    applyRealtimeThemeUpdate,
   }
 })
