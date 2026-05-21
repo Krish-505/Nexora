@@ -140,13 +140,15 @@
 
           <div class="h-6 w-px bg-slate-200" />
 
-          <!-- Notifications -->
-          <button
-            class="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+          <div
+            class="hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold sm:flex"
+            :class="realtimeState.class"
           >
-            <BellIcon class="w-4.5 h-4.5" />
-            <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
-          </button>
+            <span class="h-2 w-2 rounded-full" :class="realtimeState.dotClass" />
+            {{ realtimeState.label }}
+          </div>
+
+          <NotificationCenter />
 
           <!-- Avatar -->
           <div
@@ -185,7 +187,9 @@ import { ref, computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useThemeStore } from '../stores/themeStore'
+import { useSocketStore } from '../stores/socketStore'
 import BaseModal from '../components/BaseModal.vue'
+import NotificationCenter from '../components/ui/NotificationCenter.vue'
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -193,7 +197,6 @@ import {
   Tags as TagsIcon,
   Activity as ActivityIcon,
   Menu as MenuIcon,
-  Bell as BellIcon,
   LogOut as LogOutIcon,
   Zap as ZapIcon,
   ShieldCheck as ShieldCheckIcon,
@@ -202,6 +205,7 @@ import {
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
+const socketStore = useSocketStore()
 const router = useRouter()
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
@@ -268,6 +272,30 @@ const pageTitles = {
 }
 
 const currentPageTitle = computed(() => pageTitles[route.name] || 'Nexora')
+
+const realtimeState = computed(() => {
+  if (socketStore.reconnecting) {
+    return {
+      label: 'Reconnecting',
+      class: 'border-amber-200 bg-amber-50 text-amber-700',
+      dotClass: 'animate-pulse bg-amber-500',
+    }
+  }
+
+  if (socketStore.connected) {
+    return {
+      label: 'Realtime live',
+      class: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+      dotClass: 'bg-emerald-500',
+    }
+  }
+
+  return {
+    label: 'Offline sync',
+    class: 'border-slate-200 bg-slate-50 text-slate-500',
+    dotClass: 'bg-slate-400',
+  }
+})
 
 // ─── Logout ───────────────────────────────────────────────────────────────
 const handleLogout = async () => {

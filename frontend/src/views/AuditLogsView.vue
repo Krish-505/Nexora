@@ -137,6 +137,10 @@
           v-for="log in auditStore.filteredLogs"
           :key="log.id"
           class="relative rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:border-slate-300 hover:shadow-md sm:ml-12"
+          :class="{
+            'ring-2 ring-[rgba(var(--color-primary-rgb)/0.28)] shadow-[0_18px_48px_var(--glow-color)]':
+              auditStore.recentLogIds.includes(log.id),
+          }"
         >
           <div
             class="absolute -left-[3.25rem] top-5 hidden h-10 w-10 items-center justify-center rounded-lg border border-white shadow-sm sm:flex"

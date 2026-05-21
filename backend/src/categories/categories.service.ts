@@ -7,10 +7,15 @@ import {
 
 import { AuditService } from '../audit/audit.service';
 import { categories, products } from '../database/memory-db';
+import { DomainEventTypes } from '../realtime/domain-events';
+import { RealtimeService } from '../realtime/realtime.service';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private auditService: AuditService) {}
+  constructor(
+    private auditService: AuditService,
+    private realtimeService: RealtimeService,
+  ) {}
 
   private normalizeSlug(value: string) {
     return value
@@ -81,6 +86,18 @@ export class CategoriesService {
     };
 
     categories.unshift(category);
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.CATEGORY_CREATED,
+      tenantId: category.tenantId,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        category,
+      },
+    });
 
     this.auditService.logForUser(user, {
       action: 'CATEGORY_CREATED',
@@ -122,6 +139,19 @@ export class CategoriesService {
         product.categoryName = category.name;
       });
 
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.CATEGORY_UPDATED,
+      tenantId: category.tenantId,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        category,
+      },
+    });
+
     this.auditService.logForUser(user, {
       action: 'CATEGORY_UPDATED',
       message: `Tenant admin updated category ${category.name}`,
@@ -145,6 +175,18 @@ export class CategoriesService {
 
     const index = categories.findIndex((entry) => entry.id === id);
     categories.splice(index, 1);
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.CATEGORY_DELETED,
+      tenantId: category.tenantId,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        category,
+      },
+    });
 
     this.auditService.logForUser(user, {
       action: 'CATEGORY_DELETED',

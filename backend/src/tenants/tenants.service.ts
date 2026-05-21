@@ -15,6 +15,8 @@ import {
   type TenantThemeMode,
 } from '../database/theme-defaults';
 import { UpdateTenantThemeDto } from './dto/update-tenant-theme.dto';
+import { DomainEventTypes } from '../realtime/domain-events';
+import { RealtimeService } from '../realtime/realtime.service';
 
 const THEME_MODES: TenantThemeMode[] = ['light', 'dark'];
 const SIDEBAR_STYLES: TenantSidebarStyle[] = ['glass', 'solid', 'minimal'];
@@ -23,7 +25,10 @@ const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
 @Injectable()
 export class TenantsService {
-  constructor(private auditService: AuditService) {}
+  constructor(
+    private auditService: AuditService,
+    private realtimeService: RealtimeService,
+  ) {}
 
   private ensureSuperadmin(user: any) {
     if (user.role !== 'superadmin') {
@@ -143,6 +148,18 @@ export class TenantsService {
 
     tenants.unshift(newTenant);
     users.unshift(tenantAdmin);
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.TENANT_CREATED,
+      tenantId: newTenant.id,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        tenant: newTenant,
+      },
+    });
 
     this.auditService.logForUser(user, {
       action: 'TENANT_CREATED',
@@ -176,6 +193,19 @@ export class TenantsService {
       ...validThemeUpdate,
     };
 
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.TENANT_THEME_UPDATED,
+      tenantId: tenant.id,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        tenant,
+      },
+    });
+
     this.auditService.logForUser(user, {
       action: 'TENANT_THEME_UPDATED',
       message: `Superadmin updated theme for tenant ${tenant.name}`,
@@ -195,6 +225,20 @@ export class TenantsService {
     }
 
     tenant.active = !tenant.active;
+    this.realtimeService.emitToTenant({
+      type: tenant.active
+        ? DomainEventTypes.TENANT_ACTIVATED
+        : DomainEventTypes.TENANT_DEACTIVATED,
+      tenantId: tenant.id,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        tenant,
+      },
+    });
 
     this.auditService.logForUser(user, {
       action: tenant.active ? 'TENANT_ACTIVATED' : 'TENANT_DEACTIVATED',

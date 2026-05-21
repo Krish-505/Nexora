@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuditModule } from './audit/audit.module';
 import { CategoriesModule } from './categories/categories.module';
+import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CategoriesModule } from './categories/categories.module';
     TenantsModule,
     UsersModule,
     DashboardModule,
+    RealtimeModule,
     AuditModule,
     CategoriesModule,
   ],

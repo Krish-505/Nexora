@@ -6,6 +6,7 @@ import {
   logout as logoutService,
 } from '../services/authService'
 import { useThemeStore } from './themeStore'
+import { useSocketStore } from './socketStore'
 
 const getStoredAuthError = () => {
   const message = sessionStorage.getItem('auth:error') || ''
@@ -45,6 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     token.value = null
     useThemeStore().resetToPlatform()
+    useSocketStore().disconnect()
 
     if (!preserveError) {
       error.value = ''
@@ -85,6 +87,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = response.user
       localStorage.setItem('token', response.accessToken)
       useThemeStore().initializeForUser(response.user)
+      useSocketStore().connect()
 
       return response
     } catch (err) {
@@ -114,6 +117,7 @@ export const useAuthStore = defineStore('auth', () => {
         await logoutService()
       }
     } finally {
+      useSocketStore().disconnect()
       clearSession()
     }
   }

@@ -5,6 +5,7 @@ import router from './router'
 import { registerUnauthorizedHandler } from './services/apiClient'
 import { useAuthStore } from './stores/authStore'
 import { useNotificationStore } from './stores/notificationStore'
+import { useSocketStore } from './stores/socketStore'
 import './assets/main.css'
 
 const app = createApp(App)
@@ -14,6 +15,7 @@ app.use(pinia)
 
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
+const socketStore = useSocketStore()
 
 registerUnauthorizedHandler((message) => {
   const normalizedMessage =
@@ -31,6 +33,7 @@ registerUnauthorizedHandler((message) => {
 
 const bootstrap = async () => {
   await authStore.initAuth()
+  socketStore.connect()
 
   app.use(router)
   await router.isReady()

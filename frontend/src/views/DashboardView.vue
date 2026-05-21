@@ -58,6 +58,7 @@
           :icon="card.icon"
           :icon-class="card.iconClass"
           :bar-class="card.barClass"
+          :highlighted="dashboardStore.recentMetricKeys.includes(card.metricKey)"
           :delay="index * 35"
         />
       </div>
@@ -248,6 +249,7 @@ const statCards = computed(() => {
     return [
       {
         label: 'Total tenants',
+        metricKey: 'totalTenants',
         value: formatNumber(data.totalTenants),
         progress: 100,
         icon: BuildingIcon,
@@ -256,6 +258,7 @@ const statCards = computed(() => {
       },
       {
         label: 'Active tenants',
+        metricKey: 'activeTenants',
         value: formatNumber(data.activeTenants),
         progress: activeTenantRatio.value,
         icon: CheckCircle2Icon,
@@ -264,6 +267,7 @@ const statCards = computed(() => {
       },
       {
         label: 'Inactive tenants',
+        metricKey: 'inactiveTenants',
         value: formatNumber(data.inactiveTenants),
         progress: percentage(data.inactiveTenants, data.totalTenants),
         icon: ShieldAlertIcon,
@@ -272,6 +276,7 @@ const statCards = computed(() => {
       },
       {
         label: 'Total products',
+        metricKey: 'totalProducts',
         value: formatNumber(data.totalProducts),
         progress: 100,
         icon: BoxesIcon,
@@ -280,6 +285,7 @@ const statCards = computed(() => {
       },
       {
         label: 'Total users',
+        metricKey: 'totalUsers',
         value: formatNumber(data.totalUsers),
         progress: percentage(data.totalTenantAdmins, data.totalUsers),
         icon: UsersIcon,
@@ -292,6 +298,7 @@ const statCards = computed(() => {
   return [
     {
       label: 'Total products',
+      metricKey: 'totalProducts',
       value: formatNumber(data.totalProducts),
       progress: 100,
       icon: BoxesIcon,
@@ -300,6 +307,7 @@ const statCards = computed(() => {
     },
     {
       label: 'Active products',
+      metricKey: 'activeProducts',
       value: formatNumber(data.activeProducts),
       progress: activeProductRatio.value,
       icon: PackageCheckIcon,
@@ -308,6 +316,7 @@ const statCards = computed(() => {
     },
     {
       label: 'Low stock',
+      metricKey: 'lowStockProducts',
       value: formatNumber(data.lowStockProducts),
       progress: percentage(data.lowStockProducts, data.totalProducts),
       icon: PackageSearchIcon,
@@ -316,6 +325,7 @@ const statCards = computed(() => {
     },
     {
       label: 'Inventory value',
+      metricKey: 'totalInventoryValue',
       value: formatCurrency(data.totalInventoryValue),
       progress: 100,
       icon: WalletIcon,

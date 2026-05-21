@@ -1,6 +1,8 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 
 import { auditLogs, users } from '../database/memory-db';
+import { DomainEventTypes } from '../realtime/domain-events';
+import { RealtimeService } from '../realtime/realtime.service';
 
 type AuditLogInput = {
   action: string;
@@ -24,6 +26,8 @@ type AuditFilters = {
 
 @Injectable()
 export class AuditService {
+  constructor(private readonly realtimeService: RealtimeService) {}
+
   log(input: AuditLogInput) {
     const auditLog = {
       id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -36,6 +40,18 @@ export class AuditService {
     };
 
     auditLogs.unshift(auditLog);
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.AUDIT_CREATED,
+      tenantId: auditLog.tenantId,
+      actor: {
+        email: auditLog.performedBy,
+        role: auditLog.role,
+      },
+      timestamp: new Date(auditLog.timestamp).toISOString(),
+      payload: {
+        auditLog,
+      },
+    });
 
     return auditLog;
   }

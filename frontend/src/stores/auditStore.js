@@ -9,6 +9,7 @@ export const auditActions = [
   'TENANT_DELETED',
   'TENANT_ACTIVATED',
   'TENANT_DEACTIVATED',
+  'TENANT_THEME_UPDATED',
   'PRODUCT_CREATED',
   'PRODUCT_UPDATED',
   'PRODUCT_DELETED',
@@ -19,6 +20,7 @@ export const auditActions = [
 
 export const useAuditStore = defineStore('audit', () => {
   const logs = ref([])
+  const recentLogIds = ref([])
   const loading = ref(false)
   const error = ref('')
   const filters = reactive({
@@ -57,6 +59,38 @@ export const useAuditStore = defineStore('audit', () => {
     }
   }
 
+  const matchesActiveServerFilters = (log) => {
+    if (!log) return false
+    if (filters.action && log.action !== filters.action) return false
+    if (filters.role && log.role !== filters.role) return false
+    if (filters.tenantId && log.tenantId !== filters.tenantId) return false
+
+    return true
+  }
+
+  const markRecent = (id) => {
+    recentLogIds.value = [id, ...recentLogIds.value.filter((entry) => entry !== id)].slice(0, 10)
+
+    window.setTimeout(() => {
+      recentLogIds.value = recentLogIds.value.filter((entry) => entry !== id)
+    }, 3500)
+  }
+
+  const receiveRealtimeAuditLog = (log) => {
+    if (!matchesActiveServerFilters(log)) return
+
+    const existingIndex = logs.value.findIndex((entry) => entry.id === log.id)
+
+    if (existingIndex !== -1) {
+      logs.value[existingIndex] = log
+      markRecent(log.id)
+      return
+    }
+
+    logs.value = [log, ...logs.value].slice(0, 250)
+    markRecent(log.id)
+  }
+
   const setFilter = (key, value) => {
     filters[key] = value
   }
@@ -70,11 +104,13 @@ export const useAuditStore = defineStore('audit', () => {
 
   return {
     logs,
+    recentLogIds,
     loading,
     error,
     filters,
     filteredLogs,
     loadLogs,
+    receiveRealtimeAuditLog,
     setFilter,
     resetFilters,
   }

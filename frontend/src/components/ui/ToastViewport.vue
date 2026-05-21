@@ -47,18 +47,21 @@ const notificationStore = useNotificationStore()
 const iconMap = {
   success: CheckCircle2,
   error: AlertTriangle,
+  warning: AlertTriangle,
   info: Info,
 }
 
 const toneClasses = {
   success: 'border-emerald-200',
   error: 'border-red-200',
+  warning: 'border-amber-200',
   info: 'border-sky-200',
 }
 
 const iconToneClasses = {
   success: 'bg-emerald-50 text-emerald-600',
   error: 'bg-red-50 text-red-600',
+  warning: 'bg-amber-50 text-amber-600',
   info: 'bg-sky-50 text-sky-600',
 }
 

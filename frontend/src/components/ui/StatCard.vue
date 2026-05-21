@@ -1,6 +1,7 @@
 <template>
   <article
     class="nx-surface-strong nx-card-hover group relative overflow-hidden rounded-2xl p-5"
+    :class="{ 'ring-2 ring-[rgba(var(--color-primary-rgb)/0.26)] shadow-[0_20px_54px_var(--glow-color)]': highlighted }"
     :style="{ transitionDelay: `${delay}ms` }"
   >
     <div
@@ -48,5 +49,6 @@ defineProps({
     type: String,
     default: 'bg-slate-800',
   },
+  highlighted: Boolean,
 })
 </script>
