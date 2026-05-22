@@ -280,12 +280,33 @@ export class TenantsService {
     }
 
     let deletedUsers = 0;
+    let deletedTenantAdmins = 0;
     for (let index = users.length - 1; index >= 0; index -= 1) {
       if (users[index].tenantId === id) {
+        if (users[index].role === 'tenant-admin') {
+          deletedTenantAdmins += 1;
+        }
+
         users.splice(index, 1);
         deletedUsers += 1;
       }
     }
+
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.TENANT_DELETED,
+      tenantId: deletedTenant.id,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        tenant: deletedTenant,
+        deletedProducts,
+        deletedUsers,
+        deletedTenantAdmins,
+      },
+    });
 
     this.auditService.logForUser(user, {
       action: 'TENANT_DELETED',
@@ -298,6 +319,7 @@ export class TenantsService {
       tenant: deletedTenant,
       deletedProducts,
       deletedUsers,
+      deletedTenantAdmins,
     };
   }
 }

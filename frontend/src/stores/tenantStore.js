@@ -7,6 +7,7 @@ import {
   toggleTenant,
   updateTenantTheme,
 } from '../services/tenantService'
+import { removeEntityById, upsertEntityById } from './entityReconciliation'
 
 export const useTenantStore = defineStore('tenant', () => {
   const tenants = ref([])
@@ -57,11 +58,7 @@ export const useTenantStore = defineStore('tenant', () => {
     try {
       setProcessing(id, true)
       const updatedTenant = await toggleTenant(id)
-      const index = tenants.value.findIndex((tenant) => tenant.id === id)
-
-      if (index !== -1) {
-        tenants.value[index] = updatedTenant
-      }
+      tenants.value = upsertEntityById(tenants.value, updatedTenant)
 
       return updatedTenant
     } finally {
@@ -73,7 +70,7 @@ export const useTenantStore = defineStore('tenant', () => {
     try {
       setProcessing(id, true)
       const response = await deleteTenant(id)
-      tenants.value = tenants.value.filter((tenant) => tenant.id !== id)
+      tenants.value = removeEntityById(tenants.value, id)
       return response
     } finally {
       setProcessing(id, false)
@@ -84,11 +81,7 @@ export const useTenantStore = defineStore('tenant', () => {
     try {
       setProcessing(id, true)
       const updatedTenant = await updateTenantTheme(id, theme)
-      const index = tenants.value.findIndex((tenant) => tenant.id === id)
-
-      if (index !== -1) {
-        tenants.value[index] = updatedTenant
-      }
+      tenants.value = upsertEntityById(tenants.value, updatedTenant)
 
       return updatedTenant
     } finally {
@@ -103,16 +96,37 @@ export const useTenantStore = defineStore('tenant', () => {
 
     if (!tenantId || !nextTheme) return
 
-    tenants.value = tenants.value.map((tenant) => {
-      if (tenant.id !== tenantId) return tenant
-
-      return {
-        ...tenant,
-        ...(payload.tenant || {}),
-        name: payload.tenantName || tenant.name,
-        theme: nextTheme,
-      }
+    tenants.value = upsertEntityById(tenants.value, {
+      id: tenantId,
+      ...(payload.tenant || {}),
+      name: payload.tenantName || payload.tenant?.name,
+      theme: nextTheme,
     })
+  }
+
+  const applyRealtimeEvent = (event) => {
+    const payload = event?.payload || {}
+
+    switch (event?.type) {
+      case 'TENANT_CREATED':
+      case 'TENANT_ACTIVATED':
+      case 'TENANT_DEACTIVATED':
+        if (payload.tenant) {
+          tenants.value = upsertEntityById(tenants.value, payload.tenant)
+        }
+        break
+      case 'TENANT_THEME_UPDATED':
+        applyRealtimeThemeUpdate(event)
+        break
+      case 'TENANT_DELETED':
+        tenants.value = removeEntityById(
+          tenants.value,
+          event.tenantId || payload.tenant?.id
+        )
+        break
+      default:
+        break
+    }
   }
 
   return {
@@ -128,5 +142,6 @@ export const useTenantStore = defineStore('tenant', () => {
     removeTenant,
     updateTheme,
     applyRealtimeThemeUpdate,
+    applyRealtimeEvent,
   }
 })

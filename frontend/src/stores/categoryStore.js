@@ -6,6 +6,11 @@ import {
   fetchCategories,
   updateCategoryApi,
 } from '../services/categoryService'
+import {
+  removeEntitiesWhere,
+  removeEntityById,
+  upsertEntityById,
+} from './entityReconciliation'
 
 export const useCategoryStore = defineStore('categories', () => {
   const categories = ref([])
@@ -44,7 +49,7 @@ export const useCategoryStore = defineStore('categories', () => {
     try {
       error.value = ''
       const created = await createCategory(payload)
-      categories.value.unshift(created)
+      categories.value = upsertEntityById(categories.value, created)
       return created
     } catch (err) {
       error.value = err?.response?.data?.message || 'Failed to create category.'
@@ -56,11 +61,7 @@ export const useCategoryStore = defineStore('categories', () => {
     try {
       error.value = ''
       const updated = await updateCategoryApi(id, payload)
-      const index = categories.value.findIndex((category) => category.id === id)
-
-      if (index !== -1) {
-        categories.value[index] = updated
-      }
+      categories.value = upsertEntityById(categories.value, updated)
 
       return updated
     } catch (err) {
@@ -73,11 +74,35 @@ export const useCategoryStore = defineStore('categories', () => {
     try {
       error.value = ''
       const response = await deleteCategoryApi(id)
-      categories.value = categories.value.filter((category) => category.id !== id)
+      categories.value = removeEntityById(categories.value, id)
       return response
     } catch (err) {
       error.value = err?.response?.data?.message || 'Failed to delete category.'
       throw err
+    }
+  }
+
+  const applyRealtimeEvent = (event) => {
+    const payload = event?.payload || {}
+
+    switch (event?.type) {
+      case 'CATEGORY_CREATED':
+      case 'CATEGORY_UPDATED':
+        if (payload.category) {
+          categories.value = upsertEntityById(categories.value, payload.category)
+        }
+        break
+      case 'CATEGORY_DELETED':
+        categories.value = removeEntityById(categories.value, payload.category)
+        break
+      case 'TENANT_DELETED':
+        categories.value = removeEntitiesWhere(
+          categories.value,
+          (category) => category.tenantId === (event.tenantId || payload.tenant?.id)
+        )
+        break
+      default:
+        break
     }
   }
 
@@ -92,5 +117,6 @@ export const useCategoryStore = defineStore('categories', () => {
     addCategory,
     updateCategory,
     deleteCategory,
+    applyRealtimeEvent,
   }
 })

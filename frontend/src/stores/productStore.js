@@ -6,6 +6,11 @@ import {
   updateProductApi,
   deleteProductApi,
 } from '../services/productService'
+import {
+  removeEntitiesWhere,
+  removeEntityById,
+  upsertEntityById,
+} from './entityReconciliation'
 
 export const useProductStore = defineStore('products', () => {
   // ─── State ────────────────────────────────────────────────────────────────
@@ -52,7 +57,7 @@ export const useProductStore = defineStore('products', () => {
     try {
       error.value = ''
       const created = await createProduct(payload)
-      products.value.unshift(created)
+      products.value = upsertEntityById(products.value, created)
       return created
     } catch (err) {
       error.value =
@@ -66,8 +71,7 @@ export const useProductStore = defineStore('products', () => {
     try {
       error.value = ''
       const updated = await updateProductApi(id, payload)
-      const index = products.value.findIndex((p) => p.id === id)
-      if (index !== -1) products.value[index] = updated
+      products.value = upsertEntityById(products.value, updated)
       return updated
     } catch (err) {
       error.value =
@@ -81,11 +85,51 @@ export const useProductStore = defineStore('products', () => {
     try {
       error.value = ''
       await deleteProductApi(id)
-      products.value = products.value.filter((p) => p.id !== id)
+      products.value = removeEntityById(products.value, id)
     } catch (err) {
       error.value =
         err?.response?.data?.message || 'Failed to delete product.'
       throw err
+    }
+  }
+
+  const applyCategoryUpdated = (category) => {
+    if (!category?.id) return
+
+    products.value = products.value.map((product) =>
+      product.categoryId === category.id
+        ? {
+            ...product,
+            categoryName: category.name,
+          }
+        : product
+    )
+  }
+
+  const applyRealtimeEvent = (event) => {
+    const payload = event?.payload || {}
+
+    switch (event?.type) {
+      case 'PRODUCT_CREATED':
+      case 'PRODUCT_UPDATED':
+        if (payload.product) {
+          products.value = upsertEntityById(products.value, payload.product)
+        }
+        break
+      case 'PRODUCT_DELETED':
+        products.value = removeEntityById(products.value, payload.product)
+        break
+      case 'CATEGORY_UPDATED':
+        applyCategoryUpdated(payload.category)
+        break
+      case 'TENANT_DELETED':
+        products.value = removeEntitiesWhere(
+          products.value,
+          (product) => product.tenantId === (event.tenantId || payload.tenant?.id)
+        )
+        break
+      default:
+        break
     }
   }
 
@@ -101,5 +145,6 @@ export const useProductStore = defineStore('products', () => {
     addProduct,
     updateProduct,
     deleteProduct,
+    applyRealtimeEvent,
   }
 })

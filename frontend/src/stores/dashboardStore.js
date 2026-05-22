@@ -176,6 +176,44 @@ export const useDashboardStore = defineStore('dashboard', () => {
     )
   }
 
+  const applyTenantDeleted = (payload = {}) => {
+    if (!data.value || role.value !== 'superadmin') return
+
+    const deletedTenant = payload.tenant || {}
+    const deletedUsers = Number(payload.deletedUsers || 0)
+    const deletedTenantAdmins = Number(payload.deletedTenantAdmins ?? deletedUsers)
+    const deletedProducts = Number(payload.deletedProducts || 0)
+    const wasActive = deletedTenant.active !== false
+
+    patchData(
+      {
+        totalTenants: Math.max((data.value.totalTenants || 0) - 1, 0),
+        activeTenants: Math.max(
+          (data.value.activeTenants || 0) - (wasActive ? 1 : 0),
+          0
+        ),
+        inactiveTenants: Math.max(
+          (data.value.inactiveTenants || 0) - (wasActive ? 0 : 1),
+          0
+        ),
+        totalProducts: Math.max((data.value.totalProducts || 0) - deletedProducts, 0),
+        totalTenantAdmins: Math.max(
+          (data.value.totalTenantAdmins || 0) - deletedTenantAdmins,
+          0
+        ),
+        totalUsers: Math.max((data.value.totalUsers || 0) - deletedUsers, 0),
+      },
+      [
+        'totalTenants',
+        'activeTenants',
+        'inactiveTenants',
+        'totalProducts',
+        'totalTenantAdmins',
+        'totalUsers',
+      ]
+    )
+  }
+
   const applyRealtimeEvent = (event) => {
     switch (event?.type) {
       case 'PRODUCT_CREATED':
@@ -195,6 +233,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
         break
       case 'TENANT_DEACTIVATED':
         applyTenantLifecycle(false)
+        break
+      case 'TENANT_DELETED':
+        applyTenantDeleted(event.payload)
         break
       case 'CATEGORY_CREATED':
       case 'CATEGORY_DELETED':
