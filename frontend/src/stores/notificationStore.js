@@ -13,6 +13,8 @@ const severityByEventType = {
   TENANT_DEACTIVATED: 'warning',
   TENANT_DELETED: 'error',
   TENANT_THEME_UPDATED: 'info',
+  LOW_STOCK_DETECTED: 'warning',
+  USER_WELCOME: 'success',
   DASHBOARD_UPDATED: 'info',
 }
 
@@ -28,6 +30,8 @@ const titleByEventType = {
   TENANT_DEACTIVATED: 'Tenant deactivated',
   TENANT_DELETED: 'Tenant deleted',
   TENANT_THEME_UPDATED: 'Theme updated',
+  LOW_STOCK_DETECTED: 'Low stock detected',
+  USER_WELCOME: 'Welcome email',
   DASHBOARD_UPDATED: 'Dashboard updated',
 }
 

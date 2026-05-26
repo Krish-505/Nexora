@@ -10,6 +10,8 @@ import { AuditService } from '../audit/audit.service';
 import { DomainEventTypes } from '../realtime/domain-events';
 import { RealtimeService } from '../realtime/realtime.service';
 
+const LOW_STOCK_THRESHOLD = 5;
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -43,6 +45,38 @@ export class ProductsService {
     }
 
     return category;
+  }
+
+  private isLowStock(product: any) {
+    return Number(product.stock || 0) < LOW_STOCK_THRESHOLD;
+  }
+
+  private lowStockSeverity(product: any) {
+    return Number(product.stock || 0) <= 0 ? 'critical' : 'warning';
+  }
+
+  private emitLowStockDetected(user: any, product: any, previousProduct?: any) {
+    this.realtimeService.emitToTenant({
+      type: DomainEventTypes.LOW_STOCK_DETECTED,
+      tenantId: product.tenantId,
+      actor: {
+        userId: user.userId,
+        role: user.role,
+      },
+      timestamp: new Date().toISOString(),
+      payload: {
+        product,
+        previousProduct,
+        threshold: LOW_STOCK_THRESHOLD,
+        severity: this.lowStockSeverity(product),
+      },
+    });
+
+    this.auditService.logForUser(user, {
+      action: 'LOW_STOCK_DETECTED',
+      message: `Low stock detected for ${product.name} (${product.stock} remaining)`,
+      tenantId: product.tenantId,
+    });
   }
 
   // ─── GET PRODUCTS ─────────────────────
@@ -102,6 +136,10 @@ export class ProductsService {
       tenantId: newProduct.tenantId,
     });
 
+    if (this.isLowStock(newProduct)) {
+      this.emitLowStockDetected(user, newProduct);
+    }
+
     return newProduct;
   }
 
@@ -158,6 +196,10 @@ export class ProductsService {
       }`,
       tenantId: product.tenantId,
     });
+
+    if (!this.isLowStock(previousProduct) && this.isLowStock(product)) {
+      this.emitLowStockDetected(user, product, previousProduct);
+    }
 
     return product;
   }

@@ -7,6 +7,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { AuditModule } from './audit/audit.module';
 import { CategoriesModule } from './categories/categories.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     UsersModule,
     DashboardModule,
     RealtimeModule,
+    EmailModule,
     AuditModule,
     CategoriesModule,
   ],

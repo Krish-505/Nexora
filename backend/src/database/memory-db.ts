@@ -41,7 +41,7 @@ export const users = [
 
   {
     id: 'tenant-admin-1',
-    email: 'admin@spotify.com',
+    email: 'krish.r2504@gmail.com',
     password: '123456',
     role: 'tenant-admin',
     tenantId: 'tenant-1',

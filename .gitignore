@@ -8,6 +8,8 @@ coverage
 # env
 .env
 .env.local
+RESEND_APIKEY*
+RESEND_API_KEY*
 
 # logs
 *.log

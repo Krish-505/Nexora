@@ -43,6 +43,7 @@ Current state: Nexora is an architecture-complete prototype. It has real fronten
 | NestJS | Modular backend architecture with controllers, services, guards, and dependency injection. |
 | JWT + Passport | Stateless authentication for protected HTTP routes. |
 | Socket.IO | Realtime gateway, authenticated socket connections, and room-based fanout. |
+| Resend API | Transactional email provider behind a centralized provider abstraction. |
 | TypeScript | Safer backend structure and clearer contracts. |
 | In-memory arrays | Temporary development database while architecture evolves. |
 
@@ -225,6 +226,35 @@ The notification system has:
 
 Realtime domain events are converted into human-readable notifications, except audit events, which appear in the audit timeline.
 
+### Transactional Email Infrastructure
+
+Nexora includes a centralized event-driven email layer:
+
+```text
+Domain Event
+  -> EmailOrchestrator
+  -> EmailService
+  -> Email Provider abstraction
+  -> Resend API
+```
+
+Business services do not call Resend or templates directly. They emit domain events, and the email orchestrator reacts asynchronously.
+
+Current communication events:
+
+- `LOW_STOCK_DETECTED`
+- `TENANT_DEACTIVATED`
+- `TENANT_CREATED`
+- `USER_WELCOME`
+
+Current templates:
+
+- Low-stock alert.
+- Tenant deactivated.
+- Welcome email placeholder.
+
+The provider layer is designed so Resend can be replaced later without changing product, tenant, or frontend logic.
+
 ### Runtime Themes
 
 Each tenant has theme configuration:
@@ -261,6 +291,8 @@ Nexora emits business-level events such as:
 - `TENANT_DEACTIVATED`
 - `TENANT_DELETED`
 - `TENANT_THEME_UPDATED`
+- `LOW_STOCK_DETECTED`
+- `USER_WELCOME`
 - `AUDIT_CREATED`
 
 Event shape:
@@ -587,6 +619,8 @@ The JWT is sent in the socket auth payload. The backend validates it, checks ten
 - Socket.IO realtime gateway.
 - Domain event system.
 - Notification center and toast notifications.
+- Event-driven transactional email infrastructure.
+- Low-stock email alerts for tenant admins.
 - Runtime CSS variable theme engine.
 - Live tenant theme synchronization.
 - Realtime product/category entity synchronization.
@@ -601,6 +635,7 @@ The JWT is sent in the socket auth payload. The backend validates it, checks ten
 - No refresh tokens or token revocation.
 - Socket.IO is single-process; no Redis adapter for horizontal scaling.
 - Realtime events are not persisted for replay after reconnect.
+- Email delivery currently runs as fire-and-forget async work without durable queue/retry storage.
 
 ### Future Roadmap
 
@@ -612,6 +647,7 @@ High-value next steps:
 - Add pagination and server-side filtering.
 - Add frontend tests and stronger backend tenant isolation tests.
 - Add Redis Socket.IO adapter for scaling.
+- Add durable email queues, retries, and delivery logs.
 - Add richer role/permission model.
 - Add durable audit retention and event replay strategy.
 

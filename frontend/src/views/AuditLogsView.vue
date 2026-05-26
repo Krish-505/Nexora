@@ -248,6 +248,11 @@ const actionConfig = {
     iconClass: 'bg-amber-50 text-amber-600',
     badgeClass: 'bg-amber-50 text-amber-700 ring-amber-200',
   },
+  LOW_STOCK_DETECTED: {
+    icon: ShieldAlertIcon,
+    iconClass: 'bg-amber-50 text-amber-600',
+    badgeClass: 'bg-amber-50 text-amber-700 ring-amber-200',
+  },
   PRODUCT_CREATED: {
     icon: PackagePlusIcon,
     iconClass: 'bg-violet-50 text-violet-600',

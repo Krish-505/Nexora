@@ -241,6 +241,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
       case 'CATEGORY_DELETED':
         markRealtimeUpdate(['catalog'])
         break
+      case 'LOW_STOCK_DETECTED':
+        markRealtimeUpdate(['lowStockProducts'])
+        break
       default:
         break
     }
